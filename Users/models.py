@@ -24,6 +24,9 @@ class Users(AbstractUser):
     cpf = models.CharField(max_length=14, unique=True)
     telephone = models.CharField(max_length=20, null=True, blank=True)
 
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email', 'fullname', 'cpf']
+
     #classe para definir o nome singular e plural do modelo no admin do Django,
     class Meta:
         verbose_name = 'Usuário'
