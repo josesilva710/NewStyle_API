@@ -3,12 +3,14 @@ from Users.serializers import UsersSerializer, AddressSerializer
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import serializers
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
+
+    serializer_class = UsersSerializer
 
     def post(self, request):
 
@@ -32,6 +34,7 @@ class LoginView(TokenObtainPairView):
 class UsersViewSet(viewsets.ModelViewSet):
     queryset = Users.objects.all()
     serializer_class = UsersSerializer
+    permission_classes = [IsAdminUser]
 
 class AddressViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.all()

@@ -36,7 +36,6 @@ class UsersSerializer(serializers.ModelSerializer):
         #metodo create_user para garantir a criptografia.
         user = Users.objects.create_user(
             email=validated_data['email'],
-            username=validated_data['email'],
             fullname=validated_data['fullname'],
             cliente_lojista=validated_data['cliente_lojista'],
             birthday=validated_data.get('birthday'),
