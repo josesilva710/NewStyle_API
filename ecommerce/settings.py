@@ -133,3 +133,6 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'USER_ID_FIELD': 'id',
 }
+
+# Configuração para usar o console como backend de email durante o desenvolvimento
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

@@ -1,5 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+import uuid
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from datetime import timedelta
 
 class Users(AbstractUser):
     USER_TYPE_CHOICES = (
@@ -46,3 +50,22 @@ class Address(models.Model):
 
     def __str__(self):
         return f"{self.rua}, {self.cidade} / {self.estado}, {self.cep}"
+
+User = get_user_model()
+
+#Classe Para gerenciamento de tokens de redefinição de senha
+class PasswordResetToken(models.Model):
+
+    #Token único para cada solicitação de redefinição de senha
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    #Gerar um token UUID único para cada solicitação
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    #Data de criação do token para controle de expiração
+    created_at = models.DateTimeField(auto_now_add=True)
+    #Campo para marcar se o token já foi utilizado
+    is_used = models.BooleanField(default=False)
+
+#Método para verificar se o token é válido (não utilizado e dentro do prazo de expiração)
+    def is_valid(self):
+        expiration_time = self.created_at + timedelta(minutes=15)
+        return not self.is_used and timezone.now() < expiration_time

@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import Users, Address
-
+from .models import Users, Address, PasswordResetToken
+import django.contrib.auth.password_validation as validators
+from django.core.exceptions import ValidationError
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,3 +45,19 @@ class UsersSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
+    
+class passwordResetTokenSerializer(serializers.Serializer):
+    
+    email = serializers.EmailField()
+
+class ResetPasswordSerializer(serializers.Serializer):
+    
+    token = serializers.UUIDField()
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_new_password(self, value):
+        try:
+            validators.validate_password(value)
+        except ValidationError as erro:
+            raise serializers.ValidationError(list(erro.messages))
+        return value
