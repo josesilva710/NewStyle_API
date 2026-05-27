@@ -9,6 +9,7 @@ from rest_framework import serializers
 from django.core.mail import send_mail
 
 class RegisterView(APIView):
+
     permission_classes = [AllowAny]
 
     serializer_class = UsersSerializer
@@ -66,8 +67,6 @@ class ForgotPasswordView(APIView):
                 from_email="no-reply@ecommerce.com",
                 recipient_list=[email],
                 fail_silently=False,
-
-                #
             )
 
         except Users.DoesNotExist:
