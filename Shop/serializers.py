@@ -8,13 +8,12 @@ class ProdutoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
         # Define os campos que são somente leitura, ou seja, não podem ser modificados pelo cliente.
-        reald_only_fields = ['users']
+        read_only_fields = ['users']
 
         #Garante que apenas usuários com perfil de lojista possam criar produtos.
         def validate(self, data):
             request = self.context.get('request')
             if request and request.user:
-
                 if request.user.cliente.lojista != 'lojista':
                     raise serializers.ValidationError({
                         "error": "Apenas usuários com perfil de lojista podem criar produtos."})
@@ -22,7 +21,9 @@ class ProdutoSerializer(serializers.ModelSerializer):
 class SKUSerializer(serializers.ModelSerializer):
     class Meta:
         model = SKU
-        fields = '__all__'
+        fields = ['estoque', 'cor', 'tamanho']
+        
+    # Garante que o SKU esteja associado a um produto criado pelo usuário autenticado.
     def validate_produto(self, value):
         request = self.context.get('request')
         if request and request.user:
@@ -30,3 +31,4 @@ class SKUSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {"error": "O SKU deve estar associado a um produto criado pelo usuário autenticado."})
         return value
+    
