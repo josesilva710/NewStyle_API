@@ -51,7 +51,7 @@ class Address(models.Model):
     def __str__(self):
         return f"{self.rua}, {self.cidade} / {self.estado}, {self.cep}"
 
-class Suporte(models.Model):
+class Contato(models.Model):
     user = models.ForeignKey(
         Users, 
         on_delete=models.CASCADE, 
