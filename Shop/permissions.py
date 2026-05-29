@@ -20,4 +20,4 @@ class IsDonoDoProduto(BasePermission):
             return True
 
         # Verifica se o usuário é o dono do produto
-        return obj.produto.users == request.user
+        return obj.produto.user == request.user
