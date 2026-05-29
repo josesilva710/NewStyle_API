@@ -1,11 +1,21 @@
 from rest_framework import serializers
 from .models import produto, SKU
-from Users.models import Users
 
 class ProdutoSerializer(serializers.ModelSerializer):
+    
+    nome_lojista = serializers.ReadOnlyField(source='user.fullname')
+
     class Meta:
         model = produto
-        fields = '__all__'
+        fields = [
+            'id',
+            'nome_lojista',
+            'nome',
+            'preco',
+            'descricao',
+            'categoria',
+            'ativo'
+        ]
 
         # Define os campos que são somente leitura, ou seja, não podem ser modificados pelo cliente.
         read_only_fields = ['users']
