@@ -1,7 +1,7 @@
 from Shop.models import produto, SKU
 from Shop.serializers import ProdutoSerializer, SKUSerializer
 from rest_framework import viewsets, filters
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from Shop.permissions import IsLojista, IsDonoDoProduto
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.exceptions import ValidationError
@@ -31,7 +31,7 @@ class ProdutoViewSet(viewsets.ModelViewSet):
 
         if produto.objects.filter(
 
-        users=self.request.user,
+        user=self.request.user,
         nome=request.data.get('nome'), 
         preco=request.data.get('preco'), 
         descricao=request.data.get('descricao')).exists():
@@ -41,7 +41,7 @@ class ProdutoViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
     # Validação para garantir que apenas o dono do produto possa atualizá-lo ou deletá-lo.
     def perform_create(self, serializer):
-        serializer.save(users=self.request.user)
+        serializer.save(user=self.request.user)
 
     # Garantindo que apenas produtos ativos sejam listados e visualizados.
     def get_queryset(self):
@@ -51,7 +51,7 @@ class ProdutoViewSet(viewsets.ModelViewSet):
         if user.is_authenticated:
 
             return produto.objects.filter(
-                Q(ativo=True) | Q(users=user)
+                Q(ativo=True) | Q(user=user)
             )
 
         return produto.objects.filter(ativo=True)
@@ -60,7 +60,7 @@ class ProdutoViewSet(viewsets.ModelViewSet):
         
         produto_instance = self.get_object()
         
-        if produto_instance.users != self.request.user:
+        if produto_instance.user != self.request.user:
             raise PermissionDenied("Você não tem permissão para atualizar este produto.")
         
         return super().update(request, *args, **kwargs)
@@ -69,7 +69,7 @@ class ProdutoViewSet(viewsets.ModelViewSet):
         
         produto_instance = self.get_object()
         
-        if produto_instance.users != self.request.user:
+        if produto_instance.user != self.request.user:
             raise PermissionDenied("Você não tem permissão para deletar este produto.")
         
         return super().destroy(request, *args, **kwargs)
@@ -99,7 +99,7 @@ class SKUViewSet(viewsets.ModelViewSet):
         except produto.DoesNotExist:
             raise NotFound("Produto não encontrado.")
         
-        if produto_instance.users != self.request.user:
+        if produto_instance.user != self.request.user:
             raise PermissionDenied("Você não tem permissão para adicionar SKUs a este produto.")
         
         if SKU.objects.filter(produto_id=produto_id, 
