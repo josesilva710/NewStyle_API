@@ -4,6 +4,16 @@ from django.conf import settings
 
 class produto(models.Model):
     
+    categorias_choices = (
+        ('calcas', 'Calças'),
+        ('camisas', 'Camisas'),
+        ('bermudas', 'Bermudas'),
+        ('vestidos', 'Vestidos'),
+        ('saias', 'Saias'),
+        ('shorts', 'Shorts'),
+        ('blusas', 'Blusas'),
+    )
+    
     users = models.ForeignKey(
     settings.AUTH_USER_MODEL, 
     on_delete=models.CASCADE, 
@@ -13,6 +23,7 @@ class produto(models.Model):
     descricao = models.TextField()
     preco = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.01)])
     imagem = models.ImageField(upload_to='produtos/', null=True, blank=True)
+    categoria = models.CharField(max_length=50, choices=categorias_choices)
 
     class Meta:
         verbose_name = 'Produto'
@@ -24,8 +35,14 @@ class produto(models.Model):
 class SKU(models.Model):
     produto = models.ForeignKey(produto, on_delete=models.CASCADE, related_name='skus')
     estoque = models.PositiveIntegerField(validators=[MinValueValidator(0)])
-    cor = models.CharField(max_length=50, null=True, blank=True)
-    tamanho = models.CharField(max_length=50, null=True, blank=True)
+    cor = models.CharField(max_length=50, null=False, blank=False)
+    tamanho = models.CharField(max_length=50, null=False, blank=False)
+
+    class Meta:
+
+        constraints = [
+            models.UniqueConstraint(fields=['produto', 'cor', 'tamanho'], name='unique_produto_cor_tamanho')
+        ]
 
     def __str__(self):
         return f"{self.produto.nome} - Cor: {self.cor} - Tamanho: {self.tamanho} - Estoque: {self.estoque}"
