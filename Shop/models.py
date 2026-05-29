@@ -1,7 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.conf import settings
-from Users.models import Users
 
 class produto(models.Model):
     
@@ -15,7 +14,7 @@ class produto(models.Model):
         ('blusas', 'Blusas'),
     )
     
-    users = models.ForeignKey(
+    user = models.ForeignKey(
     settings.AUTH_USER_MODEL, 
     on_delete=models.CASCADE, 
     related_name='produtos')
@@ -33,11 +32,11 @@ class produto(models.Model):
         verbose_name_plural = 'Produtos'
 
         constraints = [
-            models.UniqueConstraint(fields=['users', 'nome', 'preco', 'descricao'], name='unique_produto_por_lojista')
+            models.UniqueConstraint(fields=['user', 'nome', 'preco', 'descricao'], name='unique_produto_por_lojista')
         ]
 
     def __str__(self):
-        return f"{self.pk} - {self.users.fullname} - {self.nome} - R${self.preco:.2f} - Status: {'Ativo' if self.ativo else 'Inativo'}"
+        return f"{self.pk} - {self.user.fullname} - {self.nome} - R${self.preco:.2f} - Status: {'Ativo' if self.ativo else 'Inativo'}"
 
 class SKU(models.Model):
     produto = models.ForeignKey(produto, on_delete=models.CASCADE, related_name='skus')
