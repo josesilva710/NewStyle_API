@@ -51,13 +51,28 @@ class Address(models.Model):
     def __str__(self):
         return f"{self.rua}, {self.cidade} / {self.estado}, {self.cep}"
 
-User = get_user_model()
+class Suporte(models.Model):
+    user = models.ForeignKey(
+        Users, 
+        on_delete=models.CASCADE, 
+        related_name='suporte_tickets')
+    email = models.EmailField()
+    assunto = models.CharField(max_length=255)
+    descricao = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Suporte'
+        verbose_name_plural = 'Suportes'
+
+    def __str__(self):
+        return f"Ticket de Suporte - {self.assunto} ({self.user.fullname}) - {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 #Classe Para gerenciamento de tokens de redefinição de senha
 class PasswordResetToken(models.Model):
 
     #Token único para cada solicitação de redefinição de senha
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
     #Gerar um token UUID único para cada solicitação
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     #Data de criação do token para controle de expiração
