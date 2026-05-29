@@ -1,5 +1,11 @@
 from Users.models import Users, Address, PasswordResetToken
-from Users.serializers import UsersSerializer, AddressSerializer, passwordResetTokenSerializer, ResetPasswordSerializer
+from Users.serializers import (
+    UsersSerializer, 
+    AddressSerializer, 
+    passwordResetTokenSerializer, 
+    ResetPasswordSerializer,
+    MeuTokenPersonalizadoSerializer
+)
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -29,7 +35,7 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(TokenObtainPairView):
-    permission_classes = [AllowAny]
+    serializer_class = MeuTokenPersonalizadoSerializer
 
 #Criada apenas com o objetivo de listar os usuários e endereços cadastrados, para facilitar os testes. 
 # Em um cenário real, não seria recomendado expor essas informações.
