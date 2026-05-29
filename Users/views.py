@@ -1,14 +1,21 @@
 from Users.models import Users, Address, PasswordResetToken
-from Users.serializers import UsersSerializer, AddressSerializer, passwordResetTokenSerializer, ResetPasswordSerializer
+from Users.serializers import (
+    UsersSerializer, 
+    AddressSerializer, 
+    passwordResetTokenSerializer, 
+    ResetPasswordSerializer,
+    MeuTokenPersonalizadoSerializer
+)
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import serializers
 from django.core.mail import send_mail
 
 class RegisterView(APIView):
+
     permission_classes = [AllowAny]
 
     serializer_class = UsersSerializer
@@ -28,7 +35,7 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(TokenObtainPairView):
-    permission_classes = [AllowAny]
+    serializer_class = MeuTokenPersonalizadoSerializer
 
 #Criada apenas com o objetivo de listar os usuários e endereços cadastrados, para facilitar os testes. 
 # Em um cenário real, não seria recomendado expor essas informações.
@@ -66,8 +73,6 @@ class ForgotPasswordView(APIView):
                 from_email="no-reply@ecommerce.com",
                 recipient_list=[email],
                 fail_silently=False,
-
-                #
             )
 
         except Users.DoesNotExist:
@@ -83,7 +88,9 @@ class ForgotPasswordView(APIView):
 
 class ResetPasswordView(APIView):
 
-     def post(self, request):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
 
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
