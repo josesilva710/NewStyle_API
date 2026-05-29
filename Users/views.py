@@ -1,10 +1,11 @@
-from Users.models import Users, Address, PasswordResetToken
+from Users.models import Users, Address, PasswordResetToken, Contato
 from Users.serializers import (
     UsersSerializer, 
     AddressSerializer, 
     passwordResetTokenSerializer, 
     ResetPasswordSerializer,
-    MeuTokenPersonalizadoSerializer
+    MeuTokenPersonalizadoSerializer,
+    ContatoSerializer
 )
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -117,3 +118,8 @@ class ResetPasswordView(APIView):
         except PasswordResetToken.DoesNotExist:
 
             return Response({"error": "Token inválido ou expirado."}, status=status.HTTP_400_BAD_REQUEST)
+
+class ContatoViewSet(viewsets.ModelViewSet):
+    queryset = Contato.objects.all()
+    serializer_class = ContatoSerializer
+    permission_classes = [IsAuthenticated]
