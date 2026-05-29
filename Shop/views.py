@@ -1,15 +1,19 @@
 from Shop.models import produto, SKU
 from Shop.serializers import ProdutoSerializer, SKUSerializer
-from rest_framework import viewsets
+from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from Shop.permissions import IsLojista, IsDonoDoProduto
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.exceptions import ValidationError
 from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
 
 class ProdutoViewSet(viewsets.ModelViewSet):
 
     queryset = produto.objects.all()
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    ordering_fields = ['preco', 'nome']
+    search_fields = ['categoria', 'nome']
     serializer_class = ProdutoSerializer
 
     # Permissões: qualquer pessoa pode listar e visualizar produtos, 
