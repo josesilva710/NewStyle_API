@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Users, Address, PasswordResetToken
 import django.contrib.auth.password_validation as validators
 from django.core.exceptions import ValidationError
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,3 +62,9 @@ class ResetPasswordSerializer(serializers.Serializer):
         except ValidationError as erro:
             raise serializers.ValidationError(list(erro.messages))
         return value
+    
+class MeuTokenPersonalizadoSerializer(TokenObtainPairSerializer):
+    default_error_messages = {
+        'no_active_account': 'Email ou Senha inválidos. Por favor, tente novamente.'
+    }
+    
