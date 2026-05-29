@@ -71,7 +71,7 @@ class Suporte(models.Model):
 #Classe Para gerenciamento de tokens de redefinição de senha
 class PasswordResetToken(models.Model):
 
-    #Token único para cada solicitação de redefinição de senha
+    #Relacionamento com o usuário para quem o token foi gerado
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     #Gerar um token UUID único para cada solicitação
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
