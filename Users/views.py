@@ -9,7 +9,7 @@ from Users.serializers import (
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import serializers
 from django.core.mail import send_mail
@@ -88,7 +88,9 @@ class ForgotPasswordView(APIView):
 
 class ResetPasswordView(APIView):
 
-     def post(self, request):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
 
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
