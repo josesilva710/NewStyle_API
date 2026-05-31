@@ -78,7 +78,7 @@ class SKUViewSet(viewsets.ModelViewSet):
    
     queryset = SKU.objects.all()
     serializer_class = SKUSerializer
-    http_method_names = ['post', 'put', 'patch', 'delete']
+    http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     read_only_fields = ['produto']
 
@@ -113,3 +113,7 @@ class SKUViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         produto_id = self.kwargs.get('produto_pk')
         serializer.save(produto_id=produto_id)
+
+    def get_queryset(self):
+        produto_id = self.kwargs.get('produto_pk')
+        return SKU.objects.filter(produto_id=produto_id)
