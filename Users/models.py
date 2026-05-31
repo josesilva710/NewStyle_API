@@ -1,11 +1,33 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 import uuid
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
+from django.core.validators import MinLengthValidator, MaxLengthValidator
+from django.contrib.auth.base_user import BaseUserManager
 
-class Users(AbstractUser):
+class UsersManager(BaseUserManager):
+
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('O e-mail é obrigatório')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        return self.create_user(email, password, **extra_fields)
+
+class Users(AbstractBaseUser, PermissionsMixin):
+
+    objects = UsersManager()
+
     USER_TYPE_CHOICES = (
         ('cliente', 'Cliente'),
         ('lojista', 'Lojista'),
@@ -21,9 +43,13 @@ class Users(AbstractUser):
     birthday = models.DateField(null=True, blank=True)
     cpf = models.CharField(max_length=14, unique=True)
     telephone = models.CharField(max_length=20, null=True, blank=True)
+    date_joined = models.DateTimeField(auto_now_add=True)
+
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['fullname', 'cpf']
+    REQUIRED_FIELDS = ['fullname', 'cpf', 'telephone']
 
     class Meta:
         verbose_name = 'Usuário'
@@ -52,21 +78,28 @@ class Address(models.Model):
         return f"{self.rua}, {self.cidade} / {self.estado}, {self.cep}"
 
 class Contato(models.Model):
-    user = models.ForeignKey(
-        Users, 
-        on_delete=models.CASCADE, 
-        related_name='suporte_tickets')
+    nome = models.CharField(max_length=255)
+    telefone = models.CharField(max_length=20)
     email = models.EmailField()
     assunto = models.CharField(max_length=255)
-    descricao = models.TextField()
+    mensagem = models.TextField(
+        validators=[
+            MinLengthValidator(10, message="A mensagem deve ter pelo menos 10 caracteres."),
+            MaxLengthValidator(2000, message="A mensagem não pode passar de 2000 caracteres.")
+        ]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Suporte'
-        verbose_name_plural = 'Suportes'
+        verbose_name = 'Contatos'
+        verbose_name_plural = 'Contatos'
+
+        constraints = [
+            models.UniqueConstraint(fields = ['nome', 'email', 'assunto', 'mensagem'], name='unique_solicitacao_por_usuario')
+        ]
 
     def __str__(self):
-        return f"Ticket de Suporte - {self.assunto} ({self.user.fullname}) - {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+        return f"Ticket de Contato - {self.assunto} ({self.nome}) - {self.created_at.strftime('%d/%m/%Y - %H:%M:%S')}"
 
 #Classe Para gerenciamento de tokens de redefinição de senha
 class PasswordResetToken(models.Model):
