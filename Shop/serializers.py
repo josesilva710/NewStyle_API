@@ -1,0 +1,44 @@
+from rest_framework import serializers
+from .models import produto, SKU
+
+class ProdutoSerializer(serializers.ModelSerializer):
+    
+    nome_lojista = serializers.ReadOnlyField(source='user.fullname')
+
+    class Meta:
+        model = produto
+        fields = [
+            'id',
+            'nome_lojista',
+            'nome',
+            'preco',
+            'descricao',
+            'categoria',
+            'ativo'
+        ]
+
+        # Define os campos que são somente leitura, ou seja, não podem ser modificados pelo cliente.
+        read_only_fields = ['users']
+
+        #Garante que apenas usuários com perfil de lojista possam criar produtos.
+        def validate(self, data):
+            request = self.context.get('request')
+            if request and request.user:
+                if request.user.cliente.lojista != 'lojista':
+                    raise serializers.ValidationError({
+                        "error": "Apenas usuários com perfil de lojista podem criar produtos."})
+                return data
+class SKUSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SKU
+        fields = ['estoque', 'cor', 'tamanho']
+        
+    # Garante que o SKU esteja associado a um produto criado pelo usuário autenticado.
+    def validate_produto(self, value):
+        request = self.context.get('request')
+        if request and request.user:
+            if value.produto.users != request.user:
+                raise serializers.ValidationError(
+                    {"error": "O SKU deve estar associado a um produto criado pelo usuário autenticado."})
+        return value
+    
