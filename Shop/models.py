@@ -113,7 +113,7 @@ class Pedido(models.Model):
     def __str__(self):
         return f"Pedido de {self.user.fullname} - Total: {self.total:.2f}"
 
-#Apesar de parecer redudante alguns campos com o SKU, a classe itempedido é necessária para armazenar as 
+#   Apesar de parecer redudante alguns campos com o SKU, a classe itempedido é necessária para armazenar as 
 # informações específicas de cada item dentro de um pedido no momento que estão sendo realizados, pois o 
 # estoque do SKU pode mudar depois que o pedido é feito, e precisamos garantir que as informações do pedido 
 # permaneçam consistentes mesmo que o estoque do SKU seja atualizado posteriormente.
