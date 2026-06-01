@@ -69,6 +69,7 @@ class MeuTokenPersonalizadoSerializer(TokenObtainPairSerializer):
     }
 
 class ContatoSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Contato
-        fields = ['id', 'user', 'email', 'assunto', 'descricao', 'created_at']
+        fields = ['nome', 'telefone', 'solicitacao', 'email', 'assunto', 'mensagem', 'created_at']
