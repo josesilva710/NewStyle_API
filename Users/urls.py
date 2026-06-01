@@ -6,12 +6,15 @@ from Users.views import (
     LoginView, 
     RegisterView,
     ForgotPasswordView,
-    ResetPasswordView
+    ResetPasswordView,
+    ContatoViewSet
 )
+from rest_framework_nested import routers
 
 router = routers.DefaultRouter()
 router.register(r'users', UsersViewSet)
 router.register(r'addresses', AddressViewSet)
+router.register(r'contact', ContatoViewSet, basename='contato')
 
 urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='auth_register'),

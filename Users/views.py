@@ -1,10 +1,11 @@
-from Users.models import Users, Address, PasswordResetToken
+from Users.models import Users, Address, PasswordResetToken, Contato
 from Users.serializers import (
     UsersSerializer, 
     AddressSerializer, 
     passwordResetTokenSerializer, 
     ResetPasswordSerializer,
-    MeuTokenPersonalizadoSerializer
+    MeuTokenPersonalizadoSerializer,
+    ContatoSerializer
 )
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -13,7 +14,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import serializers
 from django.core.mail import send_mail
-
+from rest_framework.throttling import AnonRateThrottle
 class RegisterView(APIView):
 
     permission_classes = [AllowAny]
@@ -47,6 +48,8 @@ class UsersViewSet(viewsets.ModelViewSet):
 class AddressViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
+
+    permission_classes = [IsAuthenticated]
 
 class ForgotPasswordView(APIView):
 
@@ -88,7 +91,7 @@ class ForgotPasswordView(APIView):
 
 class ResetPasswordView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
 
@@ -117,3 +120,42 @@ class ResetPasswordView(APIView):
         except PasswordResetToken.DoesNotExist:
 
             return Response({"error": "Token inválido ou expirado."}, status=status.HTTP_400_BAD_REQUEST)
+
+class ContatoViewSet(viewsets.ModelViewSet):
+    queryset = Contato.objects.all()
+    serializer_class = ContatoSerializer
+    permission_classes = [AllowAny]
+    
+    throttle_classes = [AnonRateThrottle]
+
+    http_method_names = ['post']
+
+    def create(self, request, *args, **kwargs):
+
+        user_autenticado = request.user.is_authenticated
+
+        if user_autenticado:
+            
+            if Contato.objects.filter(
+                nome=request.user.fullname,
+                email=request.data.get('email'),
+                assunto=request.data.get('assunto'),
+                mensagem=request.data.get('mensagem')
+            ).exists():
+                raise serializers.ValidationError("Você já enviou uma solicitação de contato com os mesmos detalhes. " \
+                "Por favor, aguarde nossa resposta antes de enviar outra solicitação.")
+        
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        return Response(
+            {"message": "Sua mensagem foi recebida. Entraremos em contato em até 72h!"}
+            , status=status.HTTP_201_CREATED)
+    
+    def perform_create(self, serializer):
+        if self.request.user.is_authenticated:
+            serializer.save(nome=self.request.user.fullname)
+        else:
+            serializer.save()
+
