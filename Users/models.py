@@ -78,9 +78,16 @@ class Address(models.Model):
         return f"{self.rua}, {self.cidade} / {self.estado}, {self.cep}"
 
 class Contato(models.Model):
+
+    tipos = [
+        ('Suporte', 'Suporte'),
+        ('Atendimento', 'Atendimento'),
+    ]
+
     nome = models.CharField(max_length=255)
     telefone = models.CharField(max_length=20)
     email = models.EmailField()
+    solicitacao = models.CharField(max_length=20, choices=tipos, blank=False, null=False)
     assunto = models.CharField(max_length=255)
     mensagem = models.TextField(
         validators=[
