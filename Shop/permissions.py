@@ -21,3 +21,13 @@ class IsDonoDoProduto(BasePermission):
 
         # Verifica se o usuário é o dono do produto
         return obj.produto.user == request.user
+    
+class IsDonoDoCarrinho(BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+
+        if request.user.is_staff:
+            return True
+
+        # Verifica se o usuário é o dono do carrinho
+        return obj.carrinho.user == request.user
