@@ -14,7 +14,7 @@ products_router.register(r'variations', SKUViewSet, basename='products-variation
 # Rota para manipular itens do carrinho (cart/items/)
 router.register(r'cart/items', ItemCarrinhoViewSet, basename='cart-items')
 
-# Rota para carrinho de compras
+# Rota para carrinho de compras (/cart/)
 router.register(r'cart', CarrinhoViewSet, basename='cart')
 
 urlpatterns = [
