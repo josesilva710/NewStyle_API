@@ -326,4 +326,3 @@ class ItemCarrinhoViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
 
         serializer.save(carrinho = self.request.user.carrinho)
-        
