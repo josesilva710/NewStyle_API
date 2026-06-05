@@ -1,18 +1,23 @@
 from django.urls import path, include
 from rest_framework_nested import routers
-from Shop.views import ProdutoViewSet, SKUViewSet  
+from Shop.views import ProdutoViewSet, SKUViewSet, ItemCarrinhoViewSet, CarrinhoViewSet
 
 router = routers.SimpleRouter()
 router.register(r'products', ProdutoViewSet, basename='produtos')
 
+# Rota aninhada para detalhes de produtos (produtos/{produto_id}/)
 products_router = routers.NestedSimpleRouter(router, r'products', lookup='produto')
+
+# Rota para variações de produtos (produtos/{produto_id}/variations/)
 products_router.register(r'variations', SKUViewSet, basename='products-variations')
 
-variations_router = routers.SimpleRouter()
-variations_router.register(r'variations', SKUViewSet, basename='variations')
+# Rota para manipular itens do carrinho (cart/items/)
+router.register(r'cart/items', ItemCarrinhoViewSet, basename='cart-items')
+
+# Rota para carrinho de compras
+router.register(r'cart', CarrinhoViewSet, basename='cart')
 
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(products_router.urls)),
-    path('', include(variations_router.urls)),
 ]
