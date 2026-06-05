@@ -57,13 +57,35 @@ class Carrinho(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
-        related_name='carrinho')
+        related_name='carrinho',
+        null=False, blank=False)
 
-    total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     valor_frete = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     quantidade = models.PositiveIntegerField(default=0)
     cupom = models.CharField(max_length=50, null=True, blank=True)
     entrega = models.CharField(max_length=255, null=True, blank=True)
+
+    # A propriedade total calcula o valor total do carrinho somando o valor dos produtos 
+    # sendo um campo dinâmico.
+    @property
+    def total(self):
+
+        total_produtos = 0
+
+        for item in self.itens.all():
+            total_produtos += item.sku.produto.preco * item.quantidade_add
+
+        #Exemplo de onde entraria a lógica para aplicar um desconto baseado em um cupom, 
+        # caso seja necessário implementar essa funcionalidade no futuro.
+        #uma alternativa seria o cadastro de cupoms(models) associados a cada lojista ou a plataforma.
+
+        
+        #if self.cupom:
+            # Exemplo de desconto de 10% para um cupom específico
+        #   if self.cupom == 'DESCONTO10':
+        #       total_produtos *= 0.9  # Aplica um desconto de 10%
+
+        return total_produtos
 
     class Meta:
         verbose_name = 'Carrinho'
@@ -77,11 +99,15 @@ class ItemCarrinho(models.Model):
     sku = models.ForeignKey(SKU, on_delete=models.CASCADE)
     quantidade_add = models.PositiveIntegerField(validators=[MinValueValidator(1)])
 
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-
     class Meta:
         verbose_name = 'Item do Carrinho'
         verbose_name_plural = 'Itens do Carrinho'
+
+    # A propriedade subtotal calcula o valor total do item no carrinho com base no 
+    # preço do produto e na quantidade adicionada, sendo um campo dinâmico.
+    @property
+    def subtotal(self):
+        return self.sku.produto.preco * self.quantidade_add
 
     def __str__(self):
         return f"{self.quantidade_add}x {self.sku.produto.nome} no carrinho de {self.carrinho.user.fullname}"
