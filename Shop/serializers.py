@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import produto, SKU
+from .models import produto, SKU, Carrinho, ItemCarrinho
 
 class ProdutoSerializer(serializers.ModelSerializer):
     
@@ -29,9 +29,10 @@ class ProdutoSerializer(serializers.ModelSerializer):
                         "error": "Apenas usuários com perfil de lojista podem criar produtos."})
                 return data
 class SKUSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = SKU
-        fields = ['estoque', 'cor', 'tamanho']
+        fields = ['id', 'estoque', 'cor', 'tamanho']
         
     # Garante que o SKU esteja associado a um produto criado pelo usuário autenticado.
     def validate_produto(self, value):
@@ -41,4 +42,41 @@ class SKUSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {"error": "O SKU deve estar associado a um produto criado pelo usuário autenticado."})
         return value
-    
+
+class ItemCarrinhoSerializer(serializers.ModelSerializer):
+
+    produto = serializers.PrimaryKeyRelatedField(read_only=True)
+    sku = serializers.PrimaryKeyRelatedField(queryset=SKU.objects.all())
+
+    class Meta:
+        model = ItemCarrinho
+        fields = ['id', 'produto', 'sku', 'quantidade_add']
+
+    def to_representation(self, instance):
+
+        data = super().to_representation(instance)
+        preço_unit = instance.sku.produto.preco
+
+        return {
+            'id_do_item': data['id'],
+            'id_do_produto': instance.sku.produto.id, 
+            'Lojista': instance.sku.produto.user.fullname,
+            'produto': instance.sku.produto.nome,
+            'preço_unit': preço_unit,
+            'sku': {
+                'id_sku': instance.sku.id,
+                'cor': instance.sku.cor,
+                'tamanho': instance.sku.tamanho
+            },
+            'quantidade_add': data['quantidade_add'],
+            'subtotal': instance.subtotal,
+        }
+
+class CarrinhoSerializer(serializers.ModelSerializer):
+
+    itens_do_carrinho = ItemCarrinhoSerializer(many=True, read_only=True, source='itens')
+
+    class Meta:
+        model = Carrinho
+
+        fields = ['itens_do_carrinho', 'total']
