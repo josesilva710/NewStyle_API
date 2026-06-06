@@ -121,6 +121,13 @@ class Pedido(models.Model):
         ('cancelado', 'Cancelado'),
     )
 
+    formas_de_pagamento = (
+        ('pix', 'Pix'),
+        ('crédito', 'Crédito'),
+        ('débito', 'Débito'),
+        ('boleto', 'Boleto')
+    )
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
@@ -128,7 +135,7 @@ class Pedido(models.Model):
 
     total = models.DecimalField(max_digits=10, decimal_places=2)
     entrega = models.CharField(max_length=255, null=True, blank=True)
-    forma_pagamento = models.CharField(max_length=50, null=True, blank=True)
+    forma_pagamento = models.CharField(choices = formas_de_pagamento, blank = False, null = False)
     status = models.CharField(max_length=50, default='pendente', choices=status_choices)
     data = models.DateTimeField(auto_now_add=True)
 
