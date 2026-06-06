@@ -43,13 +43,24 @@ class LoginView(TokenObtainPairView):
 class UsersViewSet(viewsets.ModelViewSet):
     queryset = Users.objects.all()
     serializer_class = UsersSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get']
+
+    def get_queryset(self):
+
+        user = self.request.user
+
+        return Users.objects.filter(id = user.id)
 
 class AddressViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
 
     permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    #   Fica registrado a intenção de incluir um CRUD p/ endereços do usuário, assim como se surgir um endereço
+    # exatamente igual à algum registrado (Ex: prédio de trabalho)
 
 class ForgotPasswordView(APIView):
 
