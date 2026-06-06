@@ -14,7 +14,6 @@ router = routers.DefaultRouter()
 router.register(r'users', UsersViewSet)
 router.register(r'addresses', AddressViewSet)
 router.register(r'contact', ContatoViewSet, basename='contato')
-router.registe(r'addresses', AddressViewSet, basename='address')
 
 urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='auth_register'),
