@@ -2,7 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.conf import settings
 
-class produto(models.Model):
+class Produto(models.Model):
     
     categorias_choices = (
         ('calcas', 'Calças'),
@@ -39,7 +39,7 @@ class produto(models.Model):
         return f"{self.pk} - {self.user.fullname} - {self.nome} - R${self.preco:.2f} - Status: {'Ativo' if self.ativo else 'Inativo'}"
 
 class SKU(models.Model):
-    produto = models.ForeignKey(produto, on_delete=models.CASCADE, related_name='skus')
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='skus')
     estoque = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     cor = models.CharField(max_length=50, null=False, blank=False)
     tamanho = models.CharField(max_length=50, null=False, blank=False)
@@ -95,7 +95,7 @@ class Carrinho(models.Model):
         return f"Carrinho de {self.user.fullname} - Total: {self.total:.2f}"
 
 class ItemCarrinho(models.Model):
-    carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='itens')
+    carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='itens_carrinho')
     sku = models.ForeignKey(SKU, on_delete=models.CASCADE)
     quantidade_add = models.PositiveIntegerField(validators=[MinValueValidator(1)])
 
@@ -128,11 +128,11 @@ class Pedido(models.Model):
         ('boleto', 'Boleto')
     )
 
-    user = models.ForeignKey(
+    cliente = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
         related_name='pedidos')
-
+    
     total = models.DecimalField(max_digits=10, decimal_places=2)
     entrega = models.CharField(max_length=255, null=True, blank=True)
     forma_pagamento = models.CharField(choices = formas_de_pagamento, blank = False, null = False)
@@ -150,14 +150,17 @@ class Pedido(models.Model):
 # informações específicas de cada item dentro de um pedido no momento que estão sendo realizados, pois o 
 # estoque do SKU pode mudar depois que o pedido é feito, e precisamos garantir que as informações do pedido 
 # permaneçam consistentes mesmo que o estoque do SKU seja atualizado posteriormente.
-class itemPedido(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='itens')
+class ItemPedido(models.Model):
+
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='itens_pedido')
     sku = models.ForeignKey(SKU, on_delete=models.SET_NULL, null=True)
     quantidade = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     preco_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    tamanho_save = models.CharField(max_length=50, null=True, blank=True)
-    cor_save = models.CharField(max_length=50, null=True, blank=True)
+
+    produto_nome_save = models.CharField(max_length=256, null = False, blank = False)
+    tamanho_save = models.CharField(max_length=50, null=False, blank=False)
+    cor_save = models.CharField(max_length=50, null= False, blank=False)
 
     class Meta:
         verbose_name = 'Item do Pedido'
@@ -165,4 +168,4 @@ class itemPedido(models.Model):
 
     def __str__(self):
         nome_produto = self.sku.produto.nome if self.sku else "Produto removido"
-        return f"{self.quantidade}x {nome_produto} no pedido de {self.pedido.user.fullname}"
+        return f"{self.quantidade}x {self.produto_nome_save} no pedido de {self.pedido.user.fullname}"
