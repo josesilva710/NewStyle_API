@@ -1,9 +1,12 @@
-from Shop.models import produto, SKU, Carrinho, ItemCarrinho
+from Shop.models import Produto, SKU, Carrinho, ItemCarrinho, Pedido, ItemPedido
+from Users.models import Address
 from Shop.serializers import(
     ProdutoSerializer, 
     SKUSerializer, 
     CarrinhoSerializer, 
-    ItemCarrinhoSerializer
+    ItemCarrinhoSerializer,
+    PedidoSerializer,
+    ItemPedidoSerializer
 )
 from rest_framework import viewsets, filters, status
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
@@ -16,7 +19,7 @@ from rest_framework.response import Response
 
 class ProdutoViewSet(viewsets.ModelViewSet):
 
-    queryset = produto.objects.all()
+    queryset = Produto.objects.all()
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     ordering_fields = ['preco', 'nome']
     search_fields = ['categoria', 'nome']
@@ -35,7 +38,7 @@ class ProdutoViewSet(viewsets.ModelViewSet):
     # Validação para garantir que um lojista não crie produtos duplicados com o mesmo nome, preço e descrição.
     def create(self, request, *args, **kwargs):
 
-        if produto.objects.filter(
+        if Produto.objects.filter(
 
         user=self.request.user,
         nome=request.data.get('nome'), 
@@ -56,11 +59,11 @@ class ProdutoViewSet(viewsets.ModelViewSet):
 
         if user.is_authenticated:
 
-            return produto.objects.filter(
+            return Produto.objects.filter(
                 Q(ativo=True) | Q(user=user)
             )
 
-        return produto.objects.filter(ativo=True)
+        return Produto.objects.filter(ativo=True)
     
     def update(self, request, *args, **kwargs):
         
@@ -103,11 +106,11 @@ class SKUViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
 
         produto_id = kwargs.get('produto_pk')
-        produto_instance = produto.objects.filter(id=produto_id)
+        produto_instance = Produto.objects.filter(id=produto_id)
 
         try:
             produto_instance = produto_instance.get()
-        except produto.DoesNotExist:
+        except Produto.DoesNotExist:
             raise NotFound("Produto não encontrado.")
         
         if produto_instance.user != self.request.user:
@@ -255,10 +258,10 @@ class ItemCarrinhoViewSet(viewsets.ModelViewSet):
         quantidade_add = request.data.get('quantidade_add', 1)
         carrinho_id = carrinho_instance.id
 
-        produto_add = produto.objects.filter(id = produto_id).first()
+        produto_add = Produto.objects.filter(id = produto_id).first()
         sku_add = SKU.objects.filter(id = sku_id).first()
 
-        if produto.objects.filter(id = produto_id).exists() == False:
+        if Produto.objects.filter(id = produto_id).exists() == False:
             raise NotFound("O ID inserido em 'produto' não pertence à um produto existente")
 
         if produto_add.user != sku_add.produto.user:
@@ -303,7 +306,7 @@ class ItemCarrinhoViewSet(viewsets.ModelViewSet):
         if ItemCarrinho.objects.filter(carrinho_id=carrinho_id).exists():
             item_carrinho_instance = ItemCarrinho.objects.filter(carrinho_id=carrinho_id).first()
             produto_loja = item_carrinho_instance.sku.produto.user
-            produto_novo = produto.objects.filter(id=produto_id).first()
+            produto_novo = Produto.objects.filter(id=produto_id).first()
 
             #   Caso o produto novo seja de um lojista diferente do produto já presente no carrinho, a adição do item é negada 
             if produto_novo and produto_novo.user != produto_loja:
@@ -326,3 +329,102 @@ class ItemCarrinhoViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
 
         serializer.save(carrinho = self.request.user.carrinho)
+
+class PedidoViewSet(viewsets.ModelViewSet):
+
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'post']
+    serializer_class = PedidoSerializer
+
+    def get_queryset(self):
+        
+        user = self.request.user
+
+        return Pedido.objects.filter(user=user)
+    
+    def create(self, request, *args, **kwargs):
+
+        address_id = request.data.get('address_id')
+        forma_pagamento = request.data.get('forma_pagamento')
+        itens_ids = request.data.get('itens_selecionados', [])
+
+        if not address_id or not forma_pagamento or not itens_ids:
+            raise ValidationError({"error": "Os campos 'address_id', 'forma_pagamento' e 'itens_selecionados' são obrigatórios."})
+
+        # Validando o endereço.
+
+        endereco_escolhido = Address.objects.filter(id = address_id, user=request.user).first()
+        if not endereco_escolhido:
+            raise ValidationError({"addres_id": "O Endereço escolhido é inválido"})
+        
+        # Validando os itens selecionados.
+        itens_comprar = ItemCarrinho.objects.filter(id__in = itens_ids, carrinho__user = request.user)
+
+        if itens_comprar.count() != len(itens_ids):
+
+            raise ValidationError({"itens_id": "Um ou mais itens selecionados, são inválidos ou não estão em seu carrinho"})
+        
+        # Verificando o estoque de cada item.
+        for item in itens_comprar:
+
+            if item.quantidade_add > item.sku.estoque:
+                raise ValidationError({"error": f"Estoque insuficiente p/ {item.sku.produto.nome}."})
+            
+        try:
+            
+            # Inicição uma transação atômica garantindo que só conclua se cada etapa ocorrer com sucesso,
+            # caso contrário será encerrado e desfeito todo o passo.
+            with transaction.atomic():
+                
+                # Criando o pedido
+                pedido = Pedido.objects.create(
+
+                    user = request.user,
+                    entrega = str(endereco_escolhido),
+                    forma_pagamento = forma_pagamento,
+                    status = 'pendente',
+                    total = 0
+                )
+
+                valor_total_do_pedido = 0
+
+                # Calculando e obtendo criando os itens do pedido
+                for item in itens_comprar:
+                    
+                    preco_na_hora = item.sku.produto.preco
+                    subtotal_item = preco_na_hora * item.quantidade_add
+
+                    ItemPedido.objects.create(
+
+                        pedido = pedido,
+                        sku = item.sku,
+                        quantidade = item.quantidade_add,
+                        preco_unitario = item.sku.produto.preco,
+                        subtotal = subtotal_item,
+                        produto_nome_save = item.sku.produto.nome,
+                        cor_save = item.sku.cor,
+                        tamanho_save = item.sku.tamanho
+
+                    )
+
+                    valor_total_do_pedido += subtotal_item
+
+                    # Atualizando o estoque após o pedido
+                    item.sku.estoque -= item.quantidade_add
+                    item.sku.save()
+
+                # Salvando o pedido
+                pedido.total = valor_total_do_pedido
+                pedido.save()
+
+                # Removendo os itens pedidos do carrinho do usuário.
+                itens_comprar.delete()
+        
+        # Tratamento de erro 
+        except Exception as e:
+
+            raise ValidationError({"error": f"Falha no processamento do pedido: {str(e)}"})
+        
+        serializer = self.get_serializer(pedido)
+
+        return Response(serializer.data, status = status.HTTP_201_CREATED)
