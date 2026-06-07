@@ -38,7 +38,7 @@ class MyUserAdmin(admin.ModelAdmin):
 #Registra o modelo Address para que ele apareça no admin
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
-    list_display = ('rua', 'cidade', 'estado', 'cep', 'user')
+    list_display = ('id', 'rua', 'cidade', 'estado', 'cep', 'user')
     search_fields = ('rua', 'cep', 'user__email', 'user__fullname')
 
 @admin.register(Contato)
