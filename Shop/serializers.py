@@ -1,12 +1,12 @@
 from rest_framework import serializers
-from .models import produto, SKU, Carrinho, ItemCarrinho
+from .models import Produto, SKU, Carrinho, ItemCarrinho, Pedido, ItemPedido
 
 class ProdutoSerializer(serializers.ModelSerializer):
     
     nome_lojista = serializers.ReadOnlyField(source='user.fullname')
 
     class Meta:
-        model = produto
+        model = Produto
         fields = [
             'id',
             'nome_lojista',
@@ -74,9 +74,27 @@ class ItemCarrinhoSerializer(serializers.ModelSerializer):
 
 class CarrinhoSerializer(serializers.ModelSerializer):
 
-    itens_do_carrinho = ItemCarrinhoSerializer(many=True, read_only=True, source='itens')
+    itens_do_carrinho = ItemCarrinhoSerializer(many=True, read_only=True, source='itens_carrinho')
 
     class Meta:
         model = Carrinho
 
         fields = ['itens_do_carrinho', 'total']
+    
+class ItemPedidoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = ItemPedido
+
+        exclude = ['sku', 'pedido']
+
+class PedidoSerializer(serializers.ModelSerializer):
+
+    itens_do_pedido = ItemPedidoSerializer(many = True, read_only = True, source='itens_pedido')
+
+    class Meta:
+
+        model = Pedido
+
+        fields = ['id', 'data', 'status', 'forma_pagamento', 'entrega', 'itens_do_pedido', 'total']
