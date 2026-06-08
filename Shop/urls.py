@@ -3,12 +3,14 @@ from rest_framework_nested import routers
 from Shop.views import ProdutoViewSet, SKUViewSet, ItemCarrinhoViewSet, CarrinhoViewSet, PedidoViewSet
 
 router = routers.SimpleRouter()
+
+#Rota para listar produtos (/products/)
 router.register(r'products', ProdutoViewSet, basename='produtos')
 
-# Rota aninhada para detalhes de produtos (produtos/{produto_id}/)
+# Rota aninhada para detalhes de produtos (products/:id/)
 products_router = routers.NestedSimpleRouter(router, r'products', lookup='produto')
 
-# Rota para variações de produtos (produtos/{produto_id}/variations/)
+# Rota para variações de produtos (produtos/:id/variations/)
 products_router.register(r'variations', SKUViewSet, basename='products-variations')
 
 # Rota para manipular itens do carrinho (cart/items/)
