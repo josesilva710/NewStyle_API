@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission
+from rest_framework import permissions
 
 #BasePermission é a classe base para criar permissões personalizadas no Django REST Framework.
 
@@ -31,3 +32,16 @@ class IsDonoDoCarrinho(BasePermission):
 
         # Verifica se o usuário é o dono do carrinho
         return obj.carrinho.user == request.user
+    
+class IsLojistaDoPedido(BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+
+
+        #Se for apenas um método de listagem
+        if request.method in permissions.SAFE_METHODS:
+
+            return True
+
+        #se for um método de PATCH/PUT
+        return obj.lojista == request.user
