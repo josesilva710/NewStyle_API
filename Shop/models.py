@@ -133,7 +133,10 @@ class Pedido(models.Model):
         on_delete=models.CASCADE, 
         related_name='pedidos')
     
-    lojista = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name = 'vendas_realizadas')
+    lojista = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.PROTECT, 
+        related_name = 'vendas_realizadas')
 
     total = models.DecimalField(max_digits=10, decimal_places=2)
     entrega = models.CharField(max_length=255, null=True, blank=True)
