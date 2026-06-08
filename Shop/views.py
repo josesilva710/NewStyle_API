@@ -6,16 +6,16 @@ from Shop.serializers import(
     CarrinhoSerializer, 
     ItemCarrinhoSerializer,
     PedidoSerializer,
-    ItemPedidoSerializer
 )
 from rest_framework import viewsets, filters, status
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
-from Shop.permissions import IsLojista, IsDonoDoProduto, IsDonoDoCarrinho
+from Shop.permissions import IsLojista, IsDonoDoProduto, IsDonoDoCarrinho, IsLojistaDoPedido
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
 from rest_framework.response import Response
+from rest_framework.decorators import action
 
 class ProdutoViewSet(viewsets.ModelViewSet):
 
@@ -333,14 +333,23 @@ class ItemCarrinhoViewSet(viewsets.ModelViewSet):
 class PedidoViewSet(viewsets.ModelViewSet):
 
     permission_classes = [IsAuthenticated]
-    http_method_names = ['get', 'post']
+    http_method_names = ['get', 'post', 'patch']
+    ordering_fields = ['status']
+    search_fields = ['status']
     serializer_class = PedidoSerializer
 
     def get_queryset(self):
         
         user = self.request.user
+        queryset = Pedido.objects.filter(Q(cliente=user) | Q(lojista=user))
 
-        return Pedido.objects.filter(user=user)
+        parametro_status = self.request.query_params.get('status', None)
+
+        if parametro_status == 'ativos':
+            status_ativos = ['pendente', 'em processamento', 'enviado']
+            queryset = queryset.filter(status__in=status_ativos)
+        
+        return queryset
     
     def create(self, request, *args, **kwargs):
 
@@ -376,10 +385,14 @@ class PedidoViewSet(viewsets.ModelViewSet):
             # caso contrário será encerrado e desfeito todo o passo.
             with transaction.atomic():
                 
+                primeiro_item = itens_comprar.first()
+                lojista_do_pedido = primeiro_item.sku.produto.user
+
                 # Criando o pedido
                 pedido = Pedido.objects.create(
 
-                    user = request.user,
+                    cliente = request.user,
+                    lojista = lojista_do_pedido,
                     entrega = str(endereco_escolhido),
                     forma_pagamento = forma_pagamento,
                     status = 'pendente',
@@ -428,3 +441,18 @@ class PedidoViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(pedido)
 
         return Response(serializer.data, status = status.HTTP_201_CREATED)
+    
+    @action(detail = True, methods = ['patch'], permission_classes=[IsAuthenticated, IsLojistaDoPedido])
+    def status(self, request, pk=None):
+
+        pedido = self.get_object()
+
+        novo_status = request.data.get('status')
+
+        if novo_status:
+            pedido.status = novo_status
+            pedido.save()
+            return Response({'status': f'Pedido Atualizado para: {novo_status}'})
+        
+        return Response({'error': 'Nenhum status fornecido'}, status = status.HTTP_400_BAD_REQUEST)
+    
