@@ -46,7 +46,7 @@ class UsersSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
-    
+
 class PasswordResetTokenSerializer(serializers.Serializer):
     
     email = serializers.EmailField()
