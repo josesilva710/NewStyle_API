@@ -2,7 +2,7 @@ from Users.models import Users, Address, PasswordResetToken, Contato, MetodoPaga
 from Users.serializers import (
     UsersSerializer, 
     AddressSerializer, 
-    passwordResetTokenSerializer, 
+    PasswordResetTokenSerializer, 
     ResetPasswordSerializer,
     MeuTokenPersonalizadoSerializer,
     ContatoSerializer,
@@ -17,6 +17,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import serializers
 from django.core.mail import send_mail
 from rest_framework.throttling import AnonRateThrottle
+from drf_spectacular.utils import extend_schema
+
 class RegisterView(APIView):
 
     permission_classes = [AllowAny]
@@ -70,9 +72,16 @@ class AddressViewSet(viewsets.ModelViewSet):
 
 class ForgotPasswordView(APIView):
 
+    @extend_schema(
+            
+        request = PasswordResetTokenSerializer,
+        responses={200: str}
+
+    )
+
     def post(self, request):
 
-        serializer = passwordResetTokenSerializer(data=request.data)
+        serializer = PasswordResetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         email = serializer.validated_data['email']
@@ -109,6 +118,13 @@ class ForgotPasswordView(APIView):
 class ResetPasswordView(APIView):
 
     permission_classes = [AllowAny]
+
+    @extend_schema(
+            
+        request = ResetPasswordSerializer,
+        responses={200: dict}
+
+    )
 
     def post(self, request):
 
@@ -177,6 +193,9 @@ class ContatoViewSet(viewsets.ModelViewSet):
             serializer.save()
 
 class MetodoPagamentoViewSet(viewsets.ModelViewSet):
+
+    #Apenas para o Swagger conseguir ler o formato
+    queryset = MetodoPagamentoUsuario.objects.none()
 
     serializer_class = MetodoPagamentoUsuarioSerializer
     http_method_names = ['get', 'post', 'delete']
