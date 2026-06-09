@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Users, Address, Contato
+from .models import Users, Address, Contato, MetodoPagamentoUsuario
 from django.db import models
 
 #Faz o endereço aparecer dentro da página do usuário
@@ -45,3 +45,5 @@ class AddressAdmin(admin.ModelAdmin):
 class ContatoAdmin(admin.ModelAdmin):
     list_display = ('assunto', 'email', 'nome', 'created_at')
     search_fields = ('assunto', 'email', 'nome')
+
+admin.site.register(MetodoPagamentoUsuario)
