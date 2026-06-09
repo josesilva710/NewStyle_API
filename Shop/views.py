@@ -138,6 +138,9 @@ class SKUViewSet(viewsets.ModelViewSet):
 
 class CarrinhoViewSet(viewsets.ModelViewSet):
     
+    #Apenas para o swagger conseguir ler o formato
+    queryset = Carrinho.objects.none()
+
     serializer_class = CarrinhoSerializer
     http_method_names = ['get']
 
@@ -254,15 +257,18 @@ class ItemCarrinhoViewSet(viewsets.ModelViewSet):
             raise NotFound("Carrinho não encontrado para o usuário autenticado.")
         
         sku_id = request.data.get('sku')
-        produto_id = request.data.get('produto')
         quantidade_add = request.data.get('quantidade_add', 1)
         carrinho_id = carrinho_instance.id
 
-        produto_add = Produto.objects.filter(id = produto_id).first()
+        if not sku_id or not quantidade_add:
+            raise ValidationError({"error": "Os campos 'sku' e 'quantidade_add' são obrigatórios"})
+        
         sku_add = SKU.objects.filter(id = sku_id).first()
-
-        if Produto.objects.filter(id = produto_id).exists() == False:
-            raise NotFound("O ID inserido em 'produto' não pertence à um produto existente")
+        
+        if not sku_add:
+            raise ValidationError({"error": "SKU não encontrado"})
+        
+        produto_add = sku_add.produto
 
         if produto_add.user != sku_add.produto.user:
 
@@ -282,12 +288,6 @@ class ItemCarrinhoViewSet(viewsets.ModelViewSet):
         
         sku_disponivel = SKU.objects.filter(id=sku_id).first()
 
-        if not sku_disponivel or not produto_id:
-            raise ValidationError({
-
-                "produto": ["Este campo é obrigatório."],
-                "sku": ["Este campo é obrigatório."]})
-
         # Verificando se o item do carrinho já existe para o mesmo SKU e carrinho
         item_carrinho_existente = ItemCarrinho.objects.filter(
             carrinho_id=carrinho_id,
@@ -306,10 +306,9 @@ class ItemCarrinhoViewSet(viewsets.ModelViewSet):
         if ItemCarrinho.objects.filter(carrinho_id=carrinho_id).exists():
             item_carrinho_instance = ItemCarrinho.objects.filter(carrinho_id=carrinho_id).first()
             produto_loja = item_carrinho_instance.sku.produto.user
-            produto_novo = Produto.objects.filter(id=produto_id).first()
 
             #   Caso o produto novo seja de um lojista diferente do produto já presente no carrinho, a adição do item é negada 
-            if produto_novo and produto_novo.user != produto_loja:
+            if produto_loja.user != produto_loja:
                 
                 raise ValidationError({"error": "Não é permitido adicionar produtos de lojistas diferentes no mesmo carrinho."})
         
@@ -331,6 +330,9 @@ class ItemCarrinhoViewSet(viewsets.ModelViewSet):
         serializer.save(carrinho = self.request.user.carrinho)
 
 class PedidoViewSet(viewsets.ModelViewSet):
+
+    #Apenas para o Swagger conseguir ler o formato
+    queryset = Pedido.objects.none()
 
     permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'patch']
