@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'Shop.apps.ShopConfig',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -140,12 +141,20 @@ REST_FRAMEWORK = {
         'anon': '5/minute',
         'user': '20/minute',
     },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'USER_ID_FIELD': 'id',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'NewStyle API com Django Rest',
+    'DESCRIPTION': 'Documentação de todas as UCs concluídas',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 # Configuração para usar o console como backend de email durante o desenvolvimento
