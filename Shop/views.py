@@ -8,7 +8,7 @@ from Shop.serializers import(
     PedidoSerializer,
 )
 from rest_framework import viewsets, filters, status
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from Shop.permissions import IsLojista, IsDonoDoProduto, IsDonoDoCarrinho, IsLojistaDoPedido
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
 from django.db.models import Q
