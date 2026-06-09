@@ -47,7 +47,7 @@ class UsersSerializer(serializers.ModelSerializer):
         )
         return user
     
-class passwordResetTokenSerializer(serializers.Serializer):
+class PasswordResetTokenSerializer(serializers.Serializer):
     
     email = serializers.EmailField()
 
