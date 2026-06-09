@@ -149,7 +149,7 @@ class Pedido(models.Model):
         verbose_name_plural = 'Pedidos'
 
     def __str__(self):
-        return f"Pedido de {self.user.fullname} - Total: {self.total:.2f}"
+        return f"Pedido do Cliente {self.cliente.fullname} ao Lojista {self.lojista.fullname}- Total: {self.total:.2f}"
 
 #   Apesar de parecer redudante alguns campos com o SKU, a classe itempedido é necessária para armazenar as 
 # informações específicas de cada item dentro de um pedido no momento que estão sendo realizados, pois o 
@@ -173,4 +173,4 @@ class ItemPedido(models.Model):
 
     def __str__(self):
         nome_produto = self.sku.produto.nome if self.sku else "Produto removido"
-        return f"{self.quantidade}x {self.produto_nome_save} no pedido de {self.pedido.user.fullname}"
+        return f"{self.quantidade}x {self.produto_nome_save} no pedido de {self.pedido.cliente.fullname}"
