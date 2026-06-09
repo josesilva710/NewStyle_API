@@ -152,7 +152,7 @@ SIMPLE_JWT = {
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'NewStyle API com Django Rest',
-    'DESCRIPTION': 'Documentação de todas as UCs concluídas',
+    'DESCRIPTION': 'NewStyle_API é uma API desenvolvida com base no desafio sugerido p/ o processo Trainee 26.1 da EJECT',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
