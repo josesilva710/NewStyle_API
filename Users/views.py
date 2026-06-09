@@ -1,16 +1,18 @@
-from Users.models import Users, Address, PasswordResetToken, Contato
+from Users.models import Users, Address, PasswordResetToken, Contato, MetodoPagamentoUsuario
 from Users.serializers import (
     UsersSerializer, 
     AddressSerializer, 
     passwordResetTokenSerializer, 
     ResetPasswordSerializer,
     MeuTokenPersonalizadoSerializer,
-    ContatoSerializer
+    ContatoSerializer,
+    MetodoPagamentoUsuarioSerializer
 )
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import serializers
 from django.core.mail import send_mail
@@ -49,6 +51,10 @@ class UsersViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
 
         user = self.request.user
+
+        if self.request.user.is_staff == True:
+
+            return Users.objects.all()
 
         return Users.objects.filter(id = user.id)
 
@@ -169,4 +175,42 @@ class ContatoViewSet(viewsets.ModelViewSet):
             serializer.save(nome=self.request.user.fullname)
         else:
             serializer.save()
+
+class MetodoPagamentoViewSet(viewsets.ModelViewSet):
+
+    serializer_class = MetodoPagamentoUsuarioSerializer
+    http_method_names = ['get', 'post', 'delete']
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+
+        user = self.request.user
+
+        return MetodoPagamentoUsuario.objects.filter(cliente = user)
+    
+    # Garantindo que os usuários apenas deletem o seu próprio método.
+    def destroy(self, request, *args, **kwargs):
+
+        metodo_instancia = self.get_object()
+
+        if metodo_instancia.cliente != self.request.user:
+            raise PermissionDenied("Você não tem permissão para deletar este método.")
+
+        return super().destroy(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+
+        user = self.request.user
+
+        return super().update(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+
+        serializer.is_valid(raise_exception = True)
+
+        serializer.save(cliente = request.user)
+
+        return Response(serializer.data, status = status.HTTP_201_CREATED)
 
