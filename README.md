@@ -21,17 +21,17 @@
 
 ## 🏗️ Estrutura e Organização
 
-A aplicação é composta por dois módulos principais (apps), dividindo as responsabilidades do e-commerce:
+A aplicação é composta por dois módulos principais, dividindo as responsabilidades do e-commerce:
 
 ### 👥 Users
 
 Gerencia a autenticação, perfis e o relacionamento com a plataforma:
 
-* **Usuários** — Controle de contas customizadas, separando os acessos e permissões entre *Clientes* e *Lojistas*.
+* **Autenticação e Segurança** — Gerenciamento de acessos via Tokens (como JWT) para controle de sessão e proteção de rotas, garantindo as permissões corretas para *Clientes* e *Lojistas*, além de controlar o fluxo temporário de redefinição de senhas.
+* **Usuários e Perfis** — Controle de contas customizadas e informações pessoais.
 * **Endereços** — Cadastro de localização (Rua, CEP, Cidade) vinculado aos usuários.
 * **Métodos de Pagamento** — Gerenciamento das opções preferidas do cliente (Pix, Crédito, Débito, Boleto).
 * **Contato** — Sistema de tickets para gerenciar solicitações de suporte e atendimento.
-* **Segurança** — Controle de tokens temporários para o fluxo de redefinição de senhas.
 
 ### 🛍️ Shop
 
