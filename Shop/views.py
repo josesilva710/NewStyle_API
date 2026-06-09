@@ -455,4 +455,3 @@ class PedidoViewSet(viewsets.ModelViewSet):
             return Response({'status': f'Pedido Atualizado para: {novo_status}'})
         
         return Response({'error': 'Nenhum status fornecido'}, status = status.HTTP_400_BAD_REQUEST)
-    
