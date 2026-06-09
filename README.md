@@ -15,6 +15,6 @@
 
 | Tecnologia | Descrição |
 | :--- | :--- |
-| **Python** | Linguagem principal do projeto |
-| **Django** | Framework backend robusto e escalável |
-| **Django REST Framework** | Criação e gerenciamento de APIs RESTful |
+| **Python 3.14.3** | Linguagem principal do projeto |
+| **Django 6.0.4** | Framework backend robusto e escalável |
+| **Django REST Framework 3.7.1** | Criação e gerenciamento de APIs RESTful |
