@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Users, Address, PasswordResetToken, Contato
+from .models import Users, Address, Contato, MetodoPagamentoUsuario
 import django.contrib.auth.password_validation as validators
 from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -73,3 +73,9 @@ class ContatoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contato
         fields = ['nome', 'telefone', 'solicitacao', 'email', 'assunto', 'mensagem', 'created_at']
+
+class MetodoPagamentoUsuarioSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MetodoPagamentoUsuario
+        fields = '__all__'

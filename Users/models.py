@@ -108,6 +108,25 @@ class Contato(models.Model):
     def __str__(self):
         return f"Ticket de Contato - {self.assunto} ({self.nome}) - {self.created_at.strftime('%d/%m/%Y - %H:%M:%S')}"
 
+class MetodoPagamentoUsuario(models.Model):
+
+    cliente = models.ForeignKey(
+        Users,
+        on_delete = models.CASCADE,
+        related_name = 'metodos_pagamento')
+    
+    formas_de_pagamento = (
+        ('pix', 'Pix'),
+        ('crédito', 'Crédito'),
+        ('débito', 'Débito'),
+        ('boleto', 'Boleto')
+    )
+
+    forma_de_pagamento = models.CharField(max_length=15, choices = formas_de_pagamento, blank = True, null = True)
+
+    def __str__(self):
+        return f"Método: {self.forma_de_pagamento} de {self.cliente.fullname}" 
+
 #Classe Para gerenciamento de tokens de redefinição de senha
 class PasswordResetToken(models.Model):
 
