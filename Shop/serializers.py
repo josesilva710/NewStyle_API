@@ -28,6 +28,7 @@ class ProdutoSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({
                         "error": "Apenas usuários com perfil de lojista podem criar produtos."})
                 return data
+            
 class SKUSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -45,12 +46,11 @@ class SKUSerializer(serializers.ModelSerializer):
 
 class ItemCarrinhoSerializer(serializers.ModelSerializer):
 
-    produto = serializers.PrimaryKeyRelatedField(read_only=True)
     sku = serializers.PrimaryKeyRelatedField(queryset=SKU.objects.all())
 
     class Meta:
         model = ItemCarrinho
-        fields = ['id', 'produto', 'sku', 'quantidade_add']
+        fields = ['id', 'sku', 'quantidade_add']
 
     def to_representation(self, instance):
 
@@ -75,7 +75,7 @@ class ItemCarrinhoSerializer(serializers.ModelSerializer):
 class CarrinhoSerializer(serializers.ModelSerializer):
 
     itens_do_carrinho = ItemCarrinhoSerializer(many=True, read_only=True, source='itens_carrinho')
-
+    total = serializers.FloatField(read_only=True)
     class Meta:
         model = Carrinho
 
