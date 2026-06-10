@@ -52,8 +52,8 @@ A API oferece diversos parâmetros para facilitar a busca e organização do cat
 
 | Parâmetro | Tipo | Descrição | Exemplo |
 | :--- | :--- | :--- | :--- |
-| `status` | String | Filtra pedidos por status específicos | `?status=ativos` |
-| `categoria` | String | Filtra produtos por categoria específica | `?categoria=camisas` |
+| `status` | String | Filtra pedidos em andamento (**ativos**: `pendente`, `em processamento`, `enviado`). Exclui entregues ou cancelados. | `?status=ativos` |
+| `categoria` | String | Filtra produtos por uma categoria específica. | `?categoria=camisas` |
 
 🔎 **Busca por Texto**
 
