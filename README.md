@@ -41,3 +41,40 @@ Gerencia o catálogo da loja, o estoque e todo o fluxo de compras:
 * **Carrinho** — Espaço dinâmico para os itens selecionados pelo usuário, com cálculo automático de subtotais e totais.
 * **Pedidos** — Histórico de transações, registrando o status da compra, forma de pagamento e vinculando o cliente ao lojista.
 * **Itens do Pedido** — Registro imutável (snapshot) dos produtos no momento da compra, garantindo que alterações futuras no catálogo não afetem o histórico de vendas.
+
+## 🔍 Filtros e Buscas - E-Commerce API
+
+📄 **Filtros Disponíveis**
+
+A API oferece diversos parâmetros para facilitar a busca e organização do catálogo e das vendas. Abaixo estão os filtros disponíveis e como utilizá-los:
+
+🎯 **Filtros Básicos**
+
+| Parâmetro | Tipo | Descrição | Exemplo |
+| :--- | :--- | :--- | :--- |
+| `status` | String | Filtra pedidos por status específicos | `?status=ativos` |
+| `categoria` | String | Filtra produtos por categoria específica | `?categoria=camisas` |
+
+🔎 **Busca por Texto**
+
+| Parâmetro | Descrição | Campos Pesquisados | Exemplo |
+| :--- | :--- | :--- | :--- |
+| `search` | Busca textual em Produtos | `nome`, `categoria` | `?search=vestido+preto` |
+| `search` | Busca textual em Pedidos | `status` | `?search=pendente` |
+
+📊 **Ordenação**
+
+| Parâmetro | Descrição | Campos Disponíveis | Exemplo |
+| :--- | :--- | :--- | :--- |
+| `ordering` | Ordena os Produtos | `preco`, `nome` | `?ordering=preco` |
+| `ordering` | Ordena os Pedidos | `status` | `?ordering=-status` |
+
+*Dica: Utilize um sinal de menos (`-`) antes do campo para ordenação decrescente (ex: `?ordering=-preco`).*
+
+📄 **Paginação**
+
+A API utiliza paginação nativa configurada para retornar **10 itens por página**.
+
+| Parâmetro | Descrição | Exemplo |
+| :--- | :--- | :--- |
+| `page` | Número da página desejada | `?page=2` |
