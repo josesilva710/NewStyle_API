@@ -116,3 +116,8 @@ NewStyle_API/
 ├── requirements.txt
 └── schema.yml
 ```
+## 👨‍💻 Autor
+
+**José Fernandes**<br>
+Desenvolvedor Backend | Estudante de Ciência e Tecnologia com ênfase em Computação<br>
+[GitHub](https://github.com/josesilva710) • [LinkedIn](https://linkedin.com/in/josesilvags)
