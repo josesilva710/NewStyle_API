@@ -79,14 +79,17 @@ A API utiliza paginação nativa configurada para retornar **10 itens por págin
 | :--- | :--- | :--- |
 | `page` | Número da página desejada | `?page=2` |
 
+## 🧱 Estrutura do Projeto
+
+```text
 NewStyle_API/
-├── ecommerce/
+├── ecommerce/                          # Configurações do projeto
 │   ├── __init__.py
 │   ├── asgi.py
 │   ├── settings.py
 │   ├── urls.py
 │   └── wsgi.py
-├── Shop/
+├── Shop/                               # App do catálogo e pedidos
 │   ├── admin.py
 │   ├── apps.py
 │   ├── models.py
@@ -97,7 +100,7 @@ NewStyle_API/
 │   ├── urls.py
 │   ├── views.py
 │   └── migrations/
-├── Users/
+├── Users/                              # App de contas e perfis
 │   ├── admin.py
 │   ├── apps.py
 │   ├── models.py
@@ -112,3 +115,4 @@ NewStyle_API/
 ├── README.md
 ├── requirements.txt
 └── schema.yml
+```
