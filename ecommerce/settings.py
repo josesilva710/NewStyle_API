@@ -150,6 +150,7 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
 }
 
+# Configurações para o Spectacular gerar a documentação.
 SPECTACULAR_SETTINGS = {
     'TITLE': 'NewStyle API com Django Rest',
     'DESCRIPTION': 'NewStyle_API é uma API desenvolvida com base no desafio sugerido p/ o processo Trainee 26.1 da EJECT',
