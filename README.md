@@ -1,4 +1,4 @@
-> # 🛒 E-Commerce NewStyle API
+# 🛒 E-Commerce NewStyle API
 
 > E-Commerce NewStyle API é uma API RESTful desenvolvida com **Django REST Framework**, criada para gerenciar produtos, pedidos e clientes/lojistas de forma integrada e escalável.
 
