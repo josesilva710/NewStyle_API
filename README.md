@@ -78,3 +78,37 @@ A API utiliza paginação nativa configurada para retornar **10 itens por págin
 | Parâmetro | Descrição | Exemplo |
 | :--- | :--- | :--- |
 | `page` | Número da página desejada | `?page=2` |
+
+NewStyle_API/
+├── ecommerce/                          # Configurações principais do projeto Django
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── Shop/                               # App do catálogo, estoque, carrinho e pedidos
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── permissions.py
+│   ├── serializers.py
+│   ├── signals.py
+│   ├── tests.py
+│   ├── urls.py
+│   ├── views.py
+│   └── migrations/
+├── Users/                              # App de autenticação, perfis e suporte do usuário
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls.py
+│   ├── views.py
+│   └── migrations/
+├── .gitignore
+├── db.sqlite3                          # Banco de dados local (SQLite)
+├── manage.py                           # Utilitário de linha de comando do Django
+├── README.md                           # Documentação principal do projeto
+├── requirements.txt                    # Dependências e bibliotecas do projeto
+└── schema.yml                          # Esquema de documentação gerado (Swagger/OpenAPI)
