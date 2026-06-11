@@ -36,7 +36,7 @@ class UsersSerializer(serializers.ModelSerializer):
         user = Users.objects.create_user(
             email=validated_data['email'],
             fullname=validated_data['fullname'],
-            user_type=validated_data['user_type', 'CUSTOMER'],
+            user_type=validated_data['user_type'],
             birthday=validated_data.get('birthday'),
             national_id=validated_data.get('national_id'),
             telephone=validated_data.get('telephone'),
