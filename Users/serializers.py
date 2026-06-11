@@ -7,12 +7,13 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        fields = ['id', 'user', 'street', 'city', 'state', 'cep', 'number']
+        fields = ['id', 'street', 'city', 'state', 'cep', 'number']
 
     def validate(self, data):
-        #Verifica se já existe um endereço igual para o mesmo usuário
+        user = self.context.get('request').user
+        
         if Address.objects.filter(
-            user=data['user'],
+            users=user,
             street=data['street'],
             city=data['city'],
             cep=data['cep']
