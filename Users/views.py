@@ -65,9 +65,7 @@ class AddressViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
 
-        user = self.request.user
-
-        return Address.objects.filter(user = user)
+        return self.request.user.addresses.all()
 
     def create(self, request, *args, **kwargs):
 
