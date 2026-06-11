@@ -65,6 +65,14 @@ Abaixo estão os parâmetros aceitos pela API:
 
 *Dica: Utilize um sinal de menos (`-`) antes do campo para ordenação decrescente (ex: `?ordering=-price`).*
 
+## 🔒 Autenticação e Segurança
+
+A API utiliza **JSON Web Token (JWT)** para garantir a segurança e o controle de acesso. Os endpoints estão protegidos e organizados da seguinte forma:
+
+* **Autenticação (`/auth/`):** Fluxo completo de `login`, `register`, `forgot-password` e `reset-password`. Ao realizar o login com sucesso, a API retorna um par de tokens (Access/Refresh) para autorização das requisições.
+* **Controle de Acesso:** Os endpoints que exigem ações específicas (como manipulação de `orders`, `cart` ou `addresses`) são protegidos e exigem o envio do Token no cabeçalho da requisição (`Authorization: Bearer <seu_token>`).
+* **Permissões:** O sistema diferencia usuários comuns de lojistas/staff, garantindo que cada um tenha acesso apenas aos recursos permitidos pelo seu perfil.
+
 ---
 ## 🧱 Estrutura do Projeto
 
