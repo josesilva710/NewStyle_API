@@ -24,6 +24,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     ordering_fields = ['price', 'name']
     search_fields = ['category', 'name']
     serializer_class = ProductSerializer
+    http_method_names = ['post', 'get', 'patch', 'delete']
 
     # Permissões: qualquer pessoa pode listar e visualizar produtos, 
     # mas apenas lojistas autenticados podem criar, atualizar ou deletar produtos.
