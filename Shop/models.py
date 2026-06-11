@@ -2,175 +2,168 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.conf import settings
 
-class Produto(models.Model):
+class Product(models.Model):
     
-    categorias_choices = (
-        ('calcas', 'Calças'),
-        ('camisas', 'Camisas'),
-        ('bermudas', 'Bermudas'),
-        ('vestidos', 'Vestidos'),
-        ('saias', 'Saias'),
-        ('shorts', 'Shorts'),
-        ('blusas', 'Blusas'),
+    CATEGORY_CHOICES = (
+        ('PANTS', 'Calças'),
+        ('SHIRTS', 'Camisas'),
+        ('BERMUDAS', 'Bermudas'),
+        ('DRESSES', 'Vestidos'),
+        ('SKIRTS', 'Saias'),
+        ('SHORTS', 'Shorts'),
+        ('BLOUSES', 'Blusas'),
     )
     
     user = models.ForeignKey(
-    settings.AUTH_USER_MODEL, 
-    on_delete=models.CASCADE, 
-    related_name='produtos')
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='products')
 
-    ativo = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
 
-    nome = models.CharField(max_length=255)
-    descricao = models.TextField()
-    preco = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.01)])
-    imagem = models.ImageField(upload_to='produtos/', null=True, blank=True)
-    categoria = models.CharField(max_length=50, choices=categorias_choices)
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.01)])
+    image = models.ImageField(upload_to='products/', null=True, blank=True)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
 
     class Meta:
-        verbose_name = 'Produto'
-        verbose_name_plural = 'Produtos'
+        verbose_name = 'Product'
+        verbose_name_plural = 'Products'
 
         constraints = [
-            models.UniqueConstraint(fields=['user', 'nome', 'preco', 'descricao'], name='unique_produto_por_lojista')
+
+            models.UniqueConstraint(fields=['user', 'name', 'price', 'description'], name='unique_product_per_merchant')
         ]
 
     def __str__(self):
-        return f"{self.pk} - {self.user.fullname} - {self.nome} - R${self.preco:.2f} - Status: {'Ativo' if self.ativo else 'Inativo'}"
+        return f"{self.pk} - {self.user.fullname} - {self.name} - R${self.price:.2f} - Status: {'Active' if self.is_active else 'Inactive'}"
+
 
 class SKU(models.Model):
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='skus')
-    estoque = models.PositiveIntegerField(validators=[MinValueValidator(0)])
-    cor = models.CharField(max_length=50, null=False, blank=False)
-    tamanho = models.CharField(max_length=50, null=False, blank=False)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='skus')
+    stock = models.PositiveIntegerField(validators=[MinValueValidator(0)])
+    color = models.CharField(max_length=50, null=False, blank=False)
+    size = models.CharField(max_length=50, null=False, blank=False)
 
     class Meta:
-
         constraints = [
-            models.UniqueConstraint(fields=['produto', 'cor', 'tamanho'], name='unique_produto_cor_tamanho')
+
+            models.UniqueConstraint(fields=['product', 'color', 'size'], name='unique_product_color_size')
         ]
 
     def __str__(self):
-        return f"{self.produto.nome} - Cor: {self.cor} - Tamanho: {self.tamanho} - Estoque: {self.estoque}"
+        return f"{self.product.name} - Color: {self.color} - Size: {self.size} - Stock: {self.stock}"
 
-class Carrinho(models.Model):
+
+class Cart(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
-        related_name='carrinho',
+        related_name='cart',
         null=False, blank=False)
 
-    valor_frete = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    quantidade = models.PositiveIntegerField(default=0)
-    cupom = models.CharField(max_length=50, null=True, blank=True)
-    entrega = models.CharField(max_length=255, null=True, blank=True)
+    shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    quantity = models.PositiveIntegerField(default=0)
+    coupon = models.CharField(max_length=50, null=True, blank=True)
+    delivery_address = models.CharField(max_length=255, null=True, blank=True)
 
-    # A propriedade total calcula o valor total do carrinho somando o valor dos produtos 
-    # sendo um campo dinâmico.
     @property
     def total(self):
+        total_products = 0
 
-        total_produtos = 0
+        for item in self.cart_items.all():
+            total_products += item.sku.product.price * item.quantity
 
-        for item in self.itens.all():
-            total_produtos += item.sku.produto.preco * item.quantidade_add
+        # if self.coupon:
+        #   if self.coupon == 'DESCONTO10':
+        #       total_products *= 0.9  
 
-        #Exemplo de onde entraria a lógica para aplicar um desconto baseado em um cupom, 
-        # caso seja necessário implementar essa funcionalidade no futuro.
-        #uma alternativa seria o cadastro de cupoms(models) associados a cada lojista ou a plataforma.
-
-        
-        #if self.cupom:
-            # Exemplo de desconto de 10% para um cupom específico
-        #   if self.cupom == 'DESCONTO10':
-        #       total_produtos *= 0.9  # Aplica um desconto de 10%
-
-        return total_produtos
+        return total_products
 
     class Meta:
-        verbose_name = 'Carrinho'
-        verbose_name_plural = 'Carrinhos'
+        verbose_name = 'Cart'
+        verbose_name_plural = 'Carts'
 
     def __str__(self):
-        return f"Carrinho de {self.user.fullname} - Total: {self.total:.2f}"
+        return f"Cart of {self.user.fullname} - Total: {self.total:.2f}"
 
-class ItemCarrinho(models.Model):
-    carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE, related_name='itens_carrinho')
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cart_items')
     sku = models.ForeignKey(SKU, on_delete=models.CASCADE)
-    quantidade_add = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
 
     class Meta:
-        verbose_name = 'Item do Carrinho'
-        verbose_name_plural = 'Itens do Carrinho'
+        verbose_name = 'Cart Item'
+        verbose_name_plural = 'Cart Items'
 
-    # A propriedade subtotal calcula o valor total do item no carrinho com base no 
-    # preço do produto e na quantidade adicionada, sendo um campo dinâmico.
     @property
     def subtotal(self):
-        return self.sku.produto.preco * self.quantidade_add
+
+        return self.sku.product.price * self.quantity
 
     def __str__(self):
-        return f"{self.quantidade_add}x {self.sku.produto.nome} no carrinho de {self.carrinho.user.fullname}"
+        return f"{self.quantity}x {self.sku.product.name} in {self.cart.user.fullname}'s cart"
 
-class Pedido(models.Model):
-    status_choices = (
-        ('pendente', 'Pendente'),
-        ('em processamento', 'Em Processamento'),
-        ('enviado', 'Enviado'),
-        ('entregue', 'Entregue'),
-        ('cancelado', 'Cancelado'),
+
+class Order(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('PROCESSING', 'Processing'),
+        ('SHIPPED', 'Shipped'),
+        ('DELIVERED', 'Delivered'),
+        ('CANCELED', 'Canceled'),
     )
 
-    formas_de_pagamento = (
-        ('pix', 'Pix'),
-        ('crédito', 'Crédito'),
-        ('débito', 'Débito'),
-        ('boleto', 'Boleto')
+    PAYMENT_METHOD_CHOICES = (
+        ('PIX', 'Pix'),
+        ('CREDIT_CARD', 'Credit Card'),
+        ('DEBIT_CARD', 'Debit Card'),
+        ('BOLETO', 'Boleto')
     )
 
-    cliente = models.ForeignKey(
+    customer = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
-        related_name='pedidos')
+        related_name='orders')
     
-    lojista = models.ForeignKey(
+    merchant = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.PROTECT, 
-        related_name = 'vendas_realizadas')
+        related_name='sales')
 
     total = models.DecimalField(max_digits=10, decimal_places=2)
-    entrega = models.CharField(max_length=255, null=True, blank=True)
-    forma_pagamento = models.CharField(choices = formas_de_pagamento, blank = False, null = False)
-    status = models.CharField(max_length=50, default='pendente', choices=status_choices)
-    data = models.DateTimeField(auto_now_add=True)
+    delivery_address = models.CharField(max_length=255, null=True, blank=True)
+    payment_method = models.CharField(choices=PAYMENT_METHOD_CHOICES, blank=False, null=False)
+    status = models.CharField(max_length=50, default='PENDING', choices=STATUS_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Pedido'
-        verbose_name_plural = 'Pedidos'
+        verbose_name = 'Order'
+        verbose_name_plural = 'Orders'
 
     def __str__(self):
-        return f"Pedido do Cliente {self.cliente.fullname} ao Lojista {self.lojista.fullname}- Total: {self.total:.2f}"
+        return f"Order from Customer {self.customer.fullname} to Merchant {self.merchant.fullname} - Total: {self.total:.2f}"
 
-#   Apesar de parecer redudante alguns campos com o SKU, a classe itempedido é necessária para armazenar as 
-# informações específicas de cada item dentro de um pedido no momento que estão sendo realizados, pois o 
-# estoque do SKU pode mudar depois que o pedido é feito, e precisamos garantir que as informações do pedido 
-# permaneçam consistentes mesmo que o estoque do SKU seja atualizado posteriormente.
-class ItemPedido(models.Model):
 
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='itens_pedido')
+# Apesar de parecer redundante alguns campos com o SKU, a classe OrderItem é necessária para armazenar as 
+# informações específicas de cada item dentro de um pedido no momento que estão sendo realizados...
+class OrderItem(models.Model):
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_items')
     sku = models.ForeignKey(SKU, on_delete=models.SET_NULL, null=True)
-    quantidade = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-    preco_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
 
-    produto_nome_save = models.CharField(max_length=256, null = False, blank = False)
-    tamanho_save = models.CharField(max_length=50, null=False, blank=False)
-    cor_save = models.CharField(max_length=50, null= False, blank=False)
+    saved_product_name = models.CharField(max_length=256, null=False, blank=False) 
+    saved_size = models.CharField(max_length=50, null=False, blank=False)
+    saved_color = models.CharField(max_length=50, null=False, blank=False)
 
     class Meta:
-        verbose_name = 'Item do Pedido'
-        verbose_name_plural = 'Itens do Pedido'
+        verbose_name = 'Order Item'
+        verbose_name_plural = 'Order Items'
 
     def __str__(self):
-        nome_produto = self.sku.produto.nome if self.sku else "Produto removido"
-        return f"{self.quantidade}x {self.produto_nome_save} no pedido de {self.pedido.cliente.fullname}"
+        return f"{self.quantity}x {self.saved_product_name} in {self.order.customer.fullname}'s order"

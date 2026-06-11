@@ -1,20 +1,19 @@
-from Users.models import Users, Address, PasswordResetToken, Contato, MetodoPagamentoUsuario
+from Users.models import Users, Address, PasswordResetToken, Contact, PaymentMethodUser
 from Users.serializers import (
     UsersSerializer, 
     AddressSerializer, 
-    PasswordResetTokenSerializer, 
-    ResetPasswordSerializer,
-    MeuTokenPersonalizadoSerializer,
-    ContatoSerializer,
-    MetodoPagamentoUsuarioSerializer
+    PasswordResetRequestSerializer,
+    PasswordResetConfirmSerializer,
+    CustomTokenObtainPairSerializer,
+    ContactSerializer,
+    PaymentMethodUserSerializer
 )
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework import serializers
 from django.core.mail import send_mail
 from rest_framework.throttling import AnonRateThrottle
 from drf_spectacular.utils import extend_schema
@@ -22,7 +21,6 @@ from drf_spectacular.utils import extend_schema
 class RegisterView(APIView):
 
     permission_classes = [AllowAny]
-
     serializer_class = UsersSerializer
 
     def post(self, request):
@@ -30,19 +28,20 @@ class RegisterView(APIView):
         serializer = UsersSerializer(data=request.data)
 
         if serializer.is_valid():
-
             user = serializer.save()
-
             return Response(
                 {"message":"usuário cadastrado com sucesso!" }, 
                 status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class LoginView(TokenObtainPairView):
-    serializer_class = MeuTokenPersonalizadoSerializer
 
-#Criada apenas com o objetivo de listar os usuários e endereços cadastrados, para facilitar os testes. 
+class LoginView(TokenObtainPairView):
+
+    serializer_class = CustomTokenObtainPairSerializer
+
+
+# Criada apenas com o objetivo de listar os usuários e endereços cadastrados, para facilitar os testes. 
 # Em um cenário real, não seria recomendado expor essas informações.
 class UsersViewSet(viewsets.ModelViewSet):
     queryset = Users.objects.all()
@@ -51,14 +50,11 @@ class UsersViewSet(viewsets.ModelViewSet):
     http_method_names = ['get']
 
     def get_queryset(self):
-
         user = self.request.user
-
         if self.request.user.is_staff == True:
-
             return Users.objects.all()
-
         return Users.objects.filter(id = user.id)
+
 
 class AddressViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.all()
@@ -67,29 +63,25 @@ class AddressViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'patch', 'delete']
 
-    #   Fica registrado a intenção de incluir um CRUD p/ endereços do usuário, assim como se surgir um endereço
+    # Fica registrado a intenção de incluir um CRUD p/ endereços do usuário, assim como se surgir um endereço
     # exatamente igual à algum registrado (Ex: prédio de trabalho)
+
 
 class ForgotPasswordView(APIView):
 
     @extend_schema(
-            
-        request = PasswordResetTokenSerializer,
+        request = PasswordResetRequestSerializer,
         responses={200: str}
-
     )
-
     def post(self, request):
-
-        serializer = PasswordResetTokenSerializer(data=request.data)
+        
+        serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         email = serializer.validated_data['email']
 
         try:
-
             user = Users.objects.get(email=email)
-
             reset_token = PasswordResetToken.objects.create(user=user)
 
             print(f"\n[DEBUG] TOKEN GERADO: {reset_token.token}\n")
@@ -105,37 +97,32 @@ class ForgotPasswordView(APIView):
             )
 
         except Users.DoesNotExist:
-
             pass
         except Exception as e:
-
             print(f"Erro interno: {e}")
 
         return Response({"message": 
                          "Se um usuário com esse email existir, um link de recuperação de senha foi enviado."}, 
                          status=status.HTTP_200_OK)
 
+
 class ResetPasswordView(APIView):
 
     permission_classes = [AllowAny]
 
     @extend_schema(
-            
-        request = ResetPasswordSerializer,
+        request = PasswordResetConfirmSerializer,
         responses={200: dict}
-
     )
-
     def post(self, request):
-
-        serializer = ResetPasswordSerializer(data=request.data)
+        
+        serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         token = serializer.validated_data['token']
         new_password = serializer.validated_data['new_password']
 
         try:
-
             reset_token = PasswordResetToken.objects.get(token=token)
 
             if not reset_token.is_valid():
@@ -151,16 +138,15 @@ class ResetPasswordView(APIView):
             return Response({"message": "Senha redefinida com sucesso!"}, status=status.HTTP_200_OK)
 
         except PasswordResetToken.DoesNotExist:
-
             return Response({"error": "Token inválido ou expirado."}, status=status.HTTP_400_BAD_REQUEST)
 
-class ContatoViewSet(viewsets.ModelViewSet):
-    queryset = Contato.objects.all()
-    serializer_class = ContatoSerializer
+
+class ContactViewSet(viewsets.ModelViewSet): 
+    queryset = Contact.objects.all()
+    serializer_class = ContactSerializer
     permission_classes = [AllowAny]
     
     throttle_classes = [AnonRateThrottle]
-
     http_method_names = ['post']
 
     def create(self, request, *args, **kwargs):
@@ -168,12 +154,11 @@ class ContatoViewSet(viewsets.ModelViewSet):
         user_autenticado = request.user.is_authenticated
 
         if user_autenticado:
-            
-            if Contato.objects.filter(
-                nome=request.user.fullname,
+            if Contact.objects.filter(
+                name=request.user.fullname,
                 email=request.data.get('email'),
-                assunto=request.data.get('assunto'),
-                mensagem=request.data.get('mensagem')
+                subject=request.data.get('subject'),
+                message=request.data.get('message')
             ).exists():
                 raise serializers.ValidationError("Você já enviou uma solicitação de contato com os mesmos detalhes. " \
                 "Por favor, aguarde nossa resposta antes de enviar outra solicitação.")
@@ -188,48 +173,41 @@ class ContatoViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
-            serializer.save(nome=self.request.user.fullname)
+            serializer.save(name=self.request.user.fullname)
         else:
             serializer.save()
 
-class MetodoPagamentoViewSet(viewsets.ModelViewSet):
 
-    #Apenas para o Swagger conseguir ler o formato
-    queryset = MetodoPagamentoUsuario.objects.none()
+class PaymentMethodViewSet(viewsets.ModelViewSet):
 
-    serializer_class = MetodoPagamentoUsuarioSerializer
-    http_method_names = ['get', 'post', 'delete']
+    # Apenas para o Swagger conseguir ler o formato
+    queryset = PaymentMethodUser.objects.none()
+
+    serializer_class = PaymentMethodUserSerializer
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-
         user = self.request.user
-
-        return MetodoPagamentoUsuario.objects.filter(cliente = user)
+        return PaymentMethodUser.objects.filter(customer=user)
     
     # Garantindo que os usuários apenas deletem o seu próprio método.
     def destroy(self, request, *args, **kwargs):
 
         metodo_instancia = self.get_object()
 
-        if metodo_instancia.cliente != self.request.user:
+        if metodo_instancia.customer != self.request.user:
             raise PermissionDenied("Você não tem permissão para deletar este método.")
 
         return super().destroy(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-
         user = self.request.user
-
         return super().update(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
-
         serializer = self.get_serializer(data=request.data)
-
         serializer.is_valid(raise_exception = True)
-
-        serializer.save(cliente = request.user)
+        
+        serializer.save(customer=request.user)
 
         return Response(serializer.data, status = status.HTTP_201_CREATED)
-

@@ -1,22 +1,20 @@
 from rest_framework import serializers
-from .models import Users, Address, Contato, MetodoPagamentoUsuario
+from .models import Users, Address, Contact, PaymentMethodUser
 import django.contrib.auth.password_validation as validators
 from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
-
         model = Address
-
-        fields = ['id', 'user', 'rua', 'cidade', 'estado', 'cep', 'numero']
+        fields = ['id', 'user', 'street', 'city', 'state', 'cep', 'number']
 
     def validate(self, data):
         #Verifica se já existe um endereço igual para o mesmo usuário
         if Address.objects.filter(
             user=data['user'],
-            rua=data['rua'],
-            cidade=data['cidade'],
+            street=data['street'],
+            city=data['city'],
             cep=data['cep']
         ).exists():
             raise serializers.ValidationError("Este endereço já está cadastrado para este usuário.")
@@ -30,8 +28,7 @@ class UsersSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Users
-
-        fields = ['id', 'fullname', 'email', 'cliente_lojista', 'birthday', 'cpf', 'telephone', 'password', 'addresses']
+        fields = ['id', 'fullname', 'email', 'user_type', 'birthday', 'national_id', 'telephone', 'password', 'addresses']
 
     #Reescrevendo o método que salva o objeto no banco de dados
     def create(self, validated_data):
@@ -39,19 +36,19 @@ class UsersSerializer(serializers.ModelSerializer):
         user = Users.objects.create_user(
             email=validated_data['email'],
             fullname=validated_data['fullname'],
-            cliente_lojista=validated_data['cliente_lojista'],
+            user_type=validated_data['user_type'],
             birthday=validated_data.get('birthday'),
-            cpf=validated_data.get('cpf'),
+            national_id=validated_data.get('national_id'),
             telephone=validated_data.get('telephone'),
             password=validated_data['password']
         )
         return user
 
-class PasswordResetTokenSerializer(serializers.Serializer):
+class PasswordResetRequestSerializer(serializers.Serializer):
     
     email = serializers.EmailField()
 
-class ResetPasswordSerializer(serializers.Serializer):
+class PasswordResetConfirmSerializer(serializers.Serializer):
     
     token = serializers.UUIDField()
     new_password = serializers.CharField(write_only=True)
@@ -63,19 +60,20 @@ class ResetPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError(list(erro.messages))
         return value
     
-class MeuTokenPersonalizadoSerializer(TokenObtainPairSerializer):
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     default_error_messages = {
         'no_active_account': 'Email ou Senha inválidos. Por favor, tente novamente.'
     }
 
-class ContatoSerializer(serializers.ModelSerializer):
+class ContactSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Contato
-        fields = ['nome', 'telefone', 'solicitacao', 'email', 'assunto', 'mensagem', 'created_at']
+        model = Contact
+        fields = ['name', 'phone', 'request_type', 'email', 'subject', 'message', 'created_at']
 
-class MetodoPagamentoUsuarioSerializer(serializers.ModelSerializer):
+
+class PaymentMethodUserSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = MetodoPagamentoUsuario
+        model = PaymentMethodUser
         fields = '__all__'

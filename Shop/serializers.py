@@ -1,100 +1,97 @@
 from rest_framework import serializers
-from .models import Produto, SKU, Carrinho, ItemCarrinho, Pedido, ItemPedido
+from .models import Product, SKU, Cart, CartItem, Order, OrderItem
 
-class ProdutoSerializer(serializers.ModelSerializer):
+class ProductSerializer(serializers.ModelSerializer):
     
-    nome_lojista = serializers.ReadOnlyField(source='user.fullname')
+    merchant_name = serializers.ReadOnlyField(source='user.fullname')
 
     class Meta:
-        model = Produto
+        model = Product
         fields = [
             'id',
-            'nome_lojista',
-            'nome',
-            'preco',
-            'descricao',
-            'categoria',
-            'ativo'
+            'merchant_name',
+            'name',
+            'price',
+            'description',
+            'category',
+            'is_active'
         ]
 
-        # Define os campos que são somente leitura, ou seja, não podem ser modificados pelo cliente.
-        read_only_fields = ['users']
+        read_only_fields = ['user']
 
-        #Garante que apenas usuários com perfil de lojista possam criar produtos.
-        def validate(self, data):
-            request = self.context.get('request')
-            if request and request.user:
-                if request.user.cliente.lojista != 'lojista':
-                    raise serializers.ValidationError({
-                        "error": "Apenas usuários com perfil de lojista podem criar produtos."})
-                return data
+    def validate(self, data):
+        request = self.context.get('request')
+        if request and request.user:
+            if request.user.user_type != 'MERCHANT':
+                raise serializers.ValidationError({
+                    "error": "Apenas usuários com perfil de lojista podem criar produtos."})
+        return data
             
 class SKUSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SKU
-        fields = ['id', 'estoque', 'cor', 'tamanho']
+        fields = ['id', 'stock', 'color', 'size']
         
-    # Garante que o SKU esteja associado a um produto criado pelo usuário autenticado.
-    def validate_produto(self, value):
+    def validate_product(self, value):
         request = self.context.get('request')
         if request and request.user:
-            if value.produto.users != request.user:
+            if value.user != request.user:
                 raise serializers.ValidationError(
                     {"error": "O SKU deve estar associado a um produto criado pelo usuário autenticado."})
         return value
 
-class ItemCarrinhoSerializer(serializers.ModelSerializer):
+class CartItemSerializer(serializers.ModelSerializer):
 
     sku = serializers.PrimaryKeyRelatedField(queryset=SKU.objects.all())
 
     class Meta:
-        model = ItemCarrinho
-        fields = ['id', 'sku', 'quantidade_add']
+        model = CartItem
+        fields = ['id', 'sku', 'quantity']
 
     def to_representation(self, instance):
 
         data = super().to_representation(instance)
-        preço_unit = instance.sku.produto.preco
+        unit_price = instance.sku.product.price
 
         return {
-            'id_do_item': data['id'],
-            'id_do_produto': instance.sku.produto.id, 
-            'Lojista': instance.sku.produto.user.fullname,
-            'produto': instance.sku.produto.nome,
-            'preço_unit': preço_unit,
+            'item_id': data['id'],
+            'product_id': instance.sku.product.id, 
+            'merchant': instance.sku.product.user.fullname,
+            'product': instance.sku.product.name,
+            'unit_price': unit_price,
             'sku': {
-                'id_sku': instance.sku.id,
-                'cor': instance.sku.cor,
-                'tamanho': instance.sku.tamanho
+                'sku_id': instance.sku.id,
+                'color': instance.sku.color,
+                'size': instance.sku.size
             },
-            'quantidade_add': data['quantidade_add'],
+            'quantity': data['quantity'],
             'subtotal': instance.subtotal,
         }
 
-class CarrinhoSerializer(serializers.ModelSerializer):
+class CartSerializer(serializers.ModelSerializer):
 
-    itens_do_carrinho = ItemCarrinhoSerializer(many=True, read_only=True, source='itens_carrinho')
+    cart_items = CartItemSerializer(many=True, read_only=True)
     total = serializers.FloatField(read_only=True)
-    class Meta:
-        model = Carrinho
-
-        fields = ['itens_do_carrinho', 'total']
     
-class ItemPedidoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cart
+        fields = ['cart_items', 'total']
+    
+class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
 
-        model = ItemPedido
+        model = OrderItem
 
-        exclude = ['sku', 'pedido']
+        exclude = ['sku', 'order']
 
-class PedidoSerializer(serializers.ModelSerializer):
+class OrderSerializer(serializers.ModelSerializer):
 
-    itens_do_pedido = ItemPedidoSerializer(many = True, read_only = True, source='itens_pedido')
+    order_items = OrderItemSerializer(many=True, read_only=True)
 
     class Meta:
 
-        model = Pedido
+        model = Order
 
-        fields = ['id', 'data', 'status', 'forma_pagamento', 'entrega', 'itens_do_pedido', 'total']
+        fields = ['id', 'created_at', 'status', 'payment_method', 'delivery_address', 'order_items', 'total']
