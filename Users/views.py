@@ -61,12 +61,66 @@ class AddressViewSet(viewsets.ModelViewSet):
     serializer_class = AddressSerializer
 
     permission_classes = [IsAuthenticated]
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ['get', 'post', 'delete']
 
-    # Fica registrado a intenção de incluir um CRUD p/ endereços do usuário, assim como se surgir um endereço
-    # exatamente igual à algum registrado (Ex: prédio de trabalho)
+    def get_queryset(self):
 
+        user = self.request.user
 
+        return Address.objects.filter(user = user)
+
+    def create(self, request, *args, **kwargs):
+
+        user = self.request.user
+
+        existing_address = Address.objects.filter(
+
+            street = request.data.get('street'),
+            number = request.data.get('number'),
+            city = request.data.get('city'),
+            state = request.data.get('state'),
+            cep = request.data.get('cep')
+
+        ).exists()
+
+        # Caso o endereço da tentativa de criação existir, apenas associá-lo diretamente ao usuário,
+        # ao invés de duplicidade.    
+        if existing_address:
+
+            existing_address.user = user
+            existing_address.save()
+
+            serializer = self.get_serializer(existing_address)
+            return Response (serializer.data, status = status.HTTP_200_OK)
+        
+        # Se não, será apenas mais um objeto criado.
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+    
+        serializer.save(user=user)
+    
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        address = self.get_object()
+        user = self.request.user
+
+        # Removendo a vinculação do endereço ao usuário, garantindo que não afete outros usuários do mesmo endereço.
+        with transaction.atomic():
+            address.users.remove(user)
+            
+            # Caso seja o último usuário a ser desvinculado, o endereço é limpo do banco de dados.
+            if address.users.count() == 0:
+                address.delete()
+                return Response(
+                    {"message": "Endereço removido e deletado permanentemente."}, 
+                    status=status.HTTP_204_NO_CONTENT
+                )
+            # Caso contrário, apenas remove o user.
+            return Response(
+                {"message": "Endereço dissociado da sua conta."}, 
+                status=status.HTTP_200_OK
+            )
 class ForgotPasswordView(APIView):
 
     @extend_schema(
