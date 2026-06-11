@@ -85,8 +85,14 @@ class AddressViewSet(viewsets.ModelViewSet):
         # ao invés de duplicidade.    
         if address:
 
-            address.users.add(user)
+            # Verifica se não tá postando o mesmo endereço já vinculado ao user.
+            if address.users.filter(id=user.id).exists():
+                return Response(
+                    {"error": "Este endereço já está vinculado à sua conta."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
+            address.users.add(user)
             serializer = self.get_serializer(address)
             return Response (serializer.data, status = status.HTTP_200_OK)
         
