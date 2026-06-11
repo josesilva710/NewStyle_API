@@ -37,6 +37,8 @@ class Users(AbstractBaseUser, PermissionsMixin):
         choices=USER_TYPE_CHOICES, 
     )
     
+    addresses = models.ManyToManyField('Address', related_name='users', blank = True)
+
     fullname = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     birthday = models.DateField(null=True, blank=True)
@@ -58,10 +60,6 @@ class Users(AbstractBaseUser, PermissionsMixin):
         return f"{self.fullname} - {self.user_type}"
 
 class Address(models.Model):
-    user = models.ForeignKey(
-        Users, 
-        on_delete=models.CASCADE, 
-        related_name='addresses')
     
     street = models.CharField(max_length=255)
     #Casas podem ser identificadas por números com letras, logo uma string é mais adequada
@@ -73,6 +71,12 @@ class Address(models.Model):
     class Meta:
         verbose_name = 'Address'
         verbose_name_plural = 'Addresses'
+
+        constraints = [
+
+            models.UniqueConstraint(fields=['street', 'number', 'city', 'state', 'cep'], name='unique_address')
+
+        ]
 
     def __str__(self):
         return f"{self.street}, {self.city} / {self.state}, {self.cep}"
