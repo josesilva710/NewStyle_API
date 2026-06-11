@@ -71,7 +71,7 @@ class AddressViewSet(viewsets.ModelViewSet):
 
         user = self.request.user
 
-        existing_address = Address.objects.filter(
+        address = Address.objects.filter(
 
             street = request.data.get('street'),
             number = request.data.get('number'),
@@ -79,23 +79,24 @@ class AddressViewSet(viewsets.ModelViewSet):
             state = request.data.get('state'),
             cep = request.data.get('cep')
 
-        ).exists()
+        ).first()
 
         # Caso o endereço da tentativa de criação existir, apenas associá-lo diretamente ao usuário,
         # ao invés de duplicidade.    
-        if existing_address:
+        if address:
 
-            existing_address.user = user
-            existing_address.save()
+            address.users.add(user)
 
-            serializer = self.get_serializer(existing_address)
+            serializer = self.get_serializer(address)
             return Response (serializer.data, status = status.HTTP_200_OK)
         
         # Se não, será apenas mais um objeto criado.
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-    
-        serializer.save(user=user)
+
+        new_address = serializer.save()
+
+        new_address.users.add(user)
     
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
