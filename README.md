@@ -21,64 +21,51 @@
 
 ## 🏗️ Estrutura e Organização
 
-A aplicação é composta por dois módulos principais, dividindo as responsabilidades do e-commerce:
+A aplicação é composta por dois módulos principais:
 
 ### 👥 Users
 
 Gerencia a autenticação, perfis e o relacionamento com a plataforma:
 
-* **Autenticação e Segurança** — Gerenciamento de acessos via Tokens (como JWT) para controle de sessão e proteção de rotas, garantindo as permissões corretas para *Clientes* e *Lojistas*, além de controlar o fluxo temporário de redefinição de senhas.
-* **Usuários e Perfis** — Controle de contas customizadas e informações pessoais.
-* **Endereços** — Cadastro de localização (Rua, CEP, Cidade) vinculado aos usuários.
-* **Métodos de Pagamento** — Gerenciamento das opções preferidas do cliente (Pix, Crédito, Débito, Boleto).
-* **Contato** — Sistema de tickets para gerenciar solicitações de suporte e atendimento.
+* **Autenticação e Segurança** — Gerenciamento de acessos via Tokens para controle de sessão e proteção de rotas.
+* **Usuários e Perfis** — Controle de contas customizadas e informações pessoais (`fullname`, `national_id`).
+* **Endereços** — Cadastro de localização (`street`, `city`, `state`, `cep`) vinculado aos usuários.
+* **Métodos de Pagamento** — Gerenciamento das opções de pagamento (`PIX`, `CREDIT_CARD`, `DEBIT_CARD`, `BOLETO`).
+* **Contato** — Sistema de tickets para gerenciar solicitações de suporte.
 
 ### 🛍️ Shop
 
-Gerencia o catálogo da loja, o estoque e todo o fluxo de compras:
+Gerencia o catálogo, estoque e fluxo de compras:
 
-* **Produtos e SKUs** — Cadastro do catálogo e controle rigoroso de estoque segmentado por variações (cor e tamanho).
-* **Carrinho** — Espaço dinâmico para os itens selecionados pelo usuário, com cálculo automático de subtotais e totais.
-* **Pedidos** — Histórico de transações, registrando o status da compra, forma de pagamento e vinculando o cliente ao lojista.
-* **Itens do Pedido** — Registro imutável (snapshot) dos produtos no momento da compra, garantindo que alterações futuras no catálogo não afetem o histórico de vendas.
+* **Produtos e SKUs** — Cadastro do catálogo (`Product`) e controle de estoque segmentado por variações (`color` e `size`).
+* **Carrinho** — Espaço dinâmico para os itens selecionados (`Cart` e `CartItem`), com cálculo automático de subtotal e total.
+* **Pedidos** — Histórico de transações (`Order`), registrando o `status` (ex: `PENDING`), `payment_method` e vinculando o `customer` ao `merchant`.
+* **Itens do Pedido** — Registro imutável (*snapshot*) dos produtos no momento da compra (`OrderItem`), garantindo histórico consistente.
 
-## 🔍 Filtros e Buscas - E-Commerce API
+## 🔍 Filtros e Buscas
 
-📄 **Filtros Disponíveis**
-
-A API oferece diversos parâmetros para facilitar a busca e organização do catálogo e das vendas. Abaixo estão os filtros disponíveis e como utilizá-los:
-
-🎯 **Filtros Básicos**
+### 📄 Parâmetros de Filtro
+Abaixo estão os parâmetros aceitos pela API:
 
 | Parâmetro | Tipo | Descrição | Exemplo |
 | :--- | :--- | :--- | :--- |
-| `status` | String | Filtra pedidos em andamento (**ativos**: `pendente`, `em processamento`, `enviado`). Exclui entregues ou cancelados. | `?status=ativos` |
-| `categoria` | String | Filtra produtos por uma categoria específica. | `?categoria=camisas` |
+| `status` | String | Filtra pedidos por status (**ativos**: `PENDING`, `PROCESSING`, `SHIPPED`). | `?status=ativos` |
+| `category` | String | Filtra produtos por uma categoria específica (ex: `PANTS`, `SHIRTS`). | `?category=SHIRTS` |
 
-🔎 **Busca por Texto**
-
+### 🔎 Busca por Texto
 | Parâmetro | Descrição | Campos Pesquisados | Exemplo |
 | :--- | :--- | :--- | :--- |
-| `search` | Busca textual em Produtos | `nome`, `categoria` | `?search=vestido+preto` |
-| `search` | Busca textual em Pedidos | `status` | `?search=pendente` |
+| `search` | Busca textual em Produtos | `name`, `category` | `?search=shirt` |
 
-📊 **Ordenação**
-
+### 📊 Ordenação
 | Parâmetro | Descrição | Campos Disponíveis | Exemplo |
 | :--- | :--- | :--- | :--- |
-| `ordering` | Ordena os Produtos | `preco`, `nome` | `?ordering=preco` |
+| `ordering` | Ordena os Produtos | `price`, `name` | `?ordering=price` |
 | `ordering` | Ordena os Pedidos | `status` | `?ordering=-status` |
 
-*Dica: Utilize um sinal de menos (`-`) antes do campo para ordenação decrescente (ex: `?ordering=-preco`).*
+*Dica: Utilize um sinal de menos (`-`) antes do campo para ordenação decrescente (ex: `?ordering=-price`).*
 
-📄 **Paginação**
-
-A API utiliza paginação nativa configurada para retornar **10 itens por página**.
-
-| Parâmetro | Descrição | Exemplo |
-| :--- | :--- | :--- |
-| `page` | Número da página desejada | `?page=2` |
-
+---
 ## 🧱 Estrutura do Projeto
 
 ```text
