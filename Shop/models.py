@@ -62,7 +62,7 @@ class Cart(models.Model):
         on_delete=models.CASCADE, 
         related_name='cart',
         null=False, blank=False)
-
+    
     shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     coupon = models.CharField(max_length=50, null=True, blank=True)
     delivery_address = models.CharField(max_length=255, null=True, blank=True)
