@@ -61,11 +61,11 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         if user.is_authenticated:
             return Product.objects.filter(
-                Q(is_active=True, stock__gt=0) | Q(user=user)
-            )
+                Q(is_active=True, skus__stock__gt=0) | Q(user=user)
+            ).distinct()
 
-        return Product.objects.filter(is_active=True, stock__gt=0)
-    
+        return Product.objects.filter(is_active=True, skus__stock__gt=0).distinct()
+        
     def update(self, request, *args, **kwargs):
         
         product_instance = self.get_object()
