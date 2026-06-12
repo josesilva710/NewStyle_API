@@ -37,7 +37,7 @@ class Users(AbstractBaseUser, PermissionsMixin):
         choices=USER_TYPE_CHOICES, 
     )
     
-    addresses = models.ManyToManyField('Address', related_name='users', blank = True)
+    addresses = models.ManyToManyField('Address', related_name='users', blank = True, default = 0)
 
     fullname = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
@@ -114,10 +114,7 @@ class Contact(models.Model):
 
 class PaymentMethodUser(models.Model):
 
-    customer = models.ForeignKey(
-        Users,
-        on_delete = models.CASCADE,
-        related_name = 'payments_methods')
+    customer = models.ManyToManyField(Users, related_name = 'payments_methods')
     
     PAYMENT_METHOD_CHOICES = (
         ('PIX', 'Pix'),
