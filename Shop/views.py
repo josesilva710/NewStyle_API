@@ -84,7 +84,6 @@ class ProductViewSet(viewsets.ModelViewSet):
         
         return super().destroy(request, *args, **kwargs)
 
-
 class SKUViewSet(viewsets.ModelViewSet):
    
     queryset = SKU.objects.all()
@@ -140,7 +139,6 @@ class SKUViewSet(viewsets.ModelViewSet):
         product_id = self.kwargs.get('product_pk')
         return SKU.objects.filter(product_id=product_id)
 
-
 class CartViewSet(viewsets.ModelViewSet):
     
     # Apenas para o swagger conseguir ler o formato
@@ -179,7 +177,6 @@ class CartViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Você não tem permissão para acessar este carrinho.")
 
         return Cart.objects.filter(user=user)
-
 
 class CartItemViewSet(viewsets.ModelViewSet):
 
