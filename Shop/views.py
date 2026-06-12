@@ -16,6 +16,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.exceptions import MethodNotAllowed
 
 class ProductViewSet(viewsets.ModelViewSet):
 
@@ -337,6 +338,19 @@ class OrderViewSet(viewsets.ModelViewSet):
     ordering_fields = ['status']
     search_fields = ['status']
     serializer_class = OrderSerializer
+
+    #====================
+    #   Garantindo que não acessem a rota PATCH /orders/:id/ p/ atualizar 
+    # o pedido. motivo -> o servidor estava caindo por isso
+    # e eu não faço a menor ideia do pq :'( .
+    
+    def update(self, request, *args, **kwargs):
+        raise MethodNotAllowed('PUT', detail='Não permitido. Use a rota /orders/{id}/status/ para atualizações.')
+
+    def partial_update(self, request, *args, **kwargs):
+        raise MethodNotAllowed('PATCH', detail='Não permitido. Use a rota /orders/{id}/status/ para atualizações.')
+    
+    #========================
 
     def get_queryset(self):
         
