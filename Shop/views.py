@@ -450,16 +450,23 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status = status.HTTP_201_CREATED)
     
-    @action(detail = True, methods = ['patch'], permission_classes=[IsAuthenticated, IsOrderMerchant])
+    @action(detail=True, methods=['patch'], permission_classes=[IsAuthenticated, IsOrderMerchant])
     def status(self, request, pk=None):
-
         order = self.get_object()
-
         new_status = request.data.get('status')
 
-        if new_status:
-            order.status = new_status
-            order.save()
-            return Response({'status': f'Pedido Atualizado para: {new_status}'})
-        
-        return Response({'error': 'Nenhum status fornecido'}, status = status.HTTP_400_BAD_REQUEST)
+        if not new_status:
+            return Response({'error': 'Nenhum status fornecido'}, status=status.HTTP_400_BAD_REQUEST)
+
+        #Verificando se o update é compatível com as opções do model.
+        valid_statuses = [choice[0] for choice in Order.STATUS_CHOICES]
+
+        if new_status not in valid_statuses:
+            return Response(
+                {'error': f'Status inválido. Os status permitidos são: {valid_statuses}'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        order.status = new_status
+        order.save()
+        return Response({'status': f'Pedido Atualizado para: {new_status}'})
