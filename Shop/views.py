@@ -361,7 +361,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             raise ValidationError({"error": "Os campos 'address_id', 'payment_method' e 'selected_items' são obrigatórios."})
 
         # Validando o endereço.
-        chosen_address = Address.objects.filter(id = address_id, user=request.user).first()
+        chosen_address = Address.objects.filter(id = address_id, users=request.user).first()
         if not chosen_address:
             raise ValidationError({"address_id": "O Endereço escolhido é inválido"})
         
