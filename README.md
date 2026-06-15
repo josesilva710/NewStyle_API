@@ -30,16 +30,16 @@ Gerencia a autenticação, perfis e o relacionamento com a plataforma:
 * **Autenticação e Segurança** — Gerenciamento de acessos via Tokens para controle de sessão e proteção de rotas.
 * **Usuários e Perfis** — Controle de contas customizadas e informações pessoais (`fullname`, `national_id`).
 * **Endereços** — Cadastro de localização (`street`, `city`, `state`, `cep`) vinculado aos usuários.
-* **Métodos de Pagamento** — Gerenciamento das opções de pagamento (`PIX`, `CREDIT_CARD`, `DEBIT_CARD`, `BOLETO`).
+* **Métodos de Pagamento** — Gerenciamento das opções de pagamento (`PIX`, `CREDIT_CARD`, etc). Possui validação a nível de objeto para garantir que um cliente só possa acessar e deletar os seus próprios métodos cadastrados.
 * **Contato** — Sistema de tickets para gerenciar solicitações de suporte.
 
 ### 🛍️ Shop
 
 Gerencia o catálogo, estoque e fluxo de compras:
 
-* **Produtos e SKUs** — Cadastro do catálogo (`Product`) e controle de estoque segmentado por variações (`color` e `size`).
+* **Produtos e SKUs** — Cadastro do catálogo (`Product`) e controle de estoque segmentado por variações (`color` e `size`). Inclui campos calculados dinamicamente em tempo de execução, como o total de variações (`variations_count`).
+* **Pedidos** — Histórico de transações (`Order`), registrando o `status`, `payment_method` e vinculando o `customer` ao `merchant`. Por segurança, a transição de etapas do pedido é isolada em uma rota de ação customizada (`PATCH /orders/{id}/status/`).
 * **Carrinho** — Espaço dinâmico para os itens selecionados (`Cart` e `CartItem`), com cálculo automático de subtotal e total.
-* **Pedidos** — Histórico de transações (`Order`), registrando o `status` (ex: `PENDING`), `payment_method` e vinculando o `customer` ao `merchant`.
 * **Itens do Pedido** — Registro imutável (*snapshot*) dos produtos no momento da compra (`OrderItem`), garantindo histórico consistente.
 
 ## 🔍 Filtros e Buscas
@@ -50,7 +50,8 @@ Abaixo estão os parâmetros aceitos pela API:
 | Parâmetro | Tipo | Descrição | Exemplo |
 | :--- | :--- | :--- | :--- |
 | `status` | String | Filtra pedidos por status (**ativos**: `PENDING`, `PROCESSING`, `SHIPPED`). | `?status=ativos` |
-| `category` | String | Filtra produtos por uma categoria específica (ex: `PANTS`, `SHIRTS`). | `?category=SHIRTS` |
+| `category` | String | Filtra produtos por uma categoria exata. | `?category=SHIRTS` |
+| `category__in` | String | Filtra produtos combinando múltiplas categorias separadas por vírgula. | `?category__in=SHIRTS,PANTS` |
 
 ### 🔎 Busca por Texto
 | Parâmetro | Descrição | Campos Pesquisados | Exemplo |
@@ -87,6 +88,7 @@ NewStyle_API/
 ├── Shop/                               # App do catálogo e pedidos
 │   ├── admin.py
 │   ├── apps.py
+│   ├── filters.py
 │   ├── models.py
 │   ├── permissions.py
 │   ├── serializers.py
