@@ -3,6 +3,13 @@ from django.core.validators import MinValueValidator
 from django.conf import settings
 
 class Product(models.Model):
+    """
+    Representa um produto no catálogo da plataforma.
+    
+    Esta entidade guarda as informações gerais e comuns a todas as suas variações.
+    Possui uma restrição (UniqueConstraint) que impede que um mesmo lojista crie 
+    dois produtos exatamente idênticos (mesmo nome, preço e descrição).
+    """
     
     CATEGORY_CHOICES = (
         ('PANTS', 'Calças'),
@@ -30,9 +37,7 @@ class Product(models.Model):
     class Meta:
         verbose_name = 'Product'
         verbose_name_plural = 'Products'
-
         constraints = [
-
             models.UniqueConstraint(fields=['user', 'name', 'price', 'description'], name='unique_product_per_merchant')
         ]
 
@@ -41,6 +46,13 @@ class Product(models.Model):
 
 
 class SKU(models.Model):
+    """
+    Stock Keeping Unit (SKU).
+    Representa uma variação física e específica de um Produto (ex: Camisa Azul, Tamanho M).
+    
+    É esta entidade que efetivamente gerencia o estoque disponível para venda.
+    Possui restrição para impedir variações duplicadas de cor e tamanho no mesmo produto.
+    """
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='skus')
     stock = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     color = models.CharField(max_length=50, null=False, blank=False)
@@ -48,7 +60,6 @@ class SKU(models.Model):
 
     class Meta:
         constraints = [
-
             models.UniqueConstraint(fields=['product', 'color', 'size'], name='unique_product_color_size')
         ]
 
@@ -57,6 +68,11 @@ class SKU(models.Model):
 
 
 class Cart(models.Model):
+    """
+    Representa o carrinho de compras ativo de um usuário.
+    
+    A relação é OneToOne, garantindo que cada cliente tenha apenas um carrinho ativo.
+    """
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
@@ -69,8 +85,11 @@ class Cart(models.Model):
 
     @property
     def total(self):
+        """
+        Calcula dinamicamente o valor total do carrinho.
+        Itera sobre todos os itens ativos e soma seus subtotais com base no preço atual do produto.
+        """
         total_products = 0
-
         for item in self.cart_items.all():
             total_products += item.sku.product.price * item.quantity
 
@@ -89,6 +108,9 @@ class Cart(models.Model):
 
 
 class CartItem(models.Model):
+    """
+    Representa a intenção de compra de um usuário para um SKU específico.
+    """
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cart_items')
     sku = models.ForeignKey(SKU, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
@@ -99,7 +121,7 @@ class CartItem(models.Model):
 
     @property
     def subtotal(self):
-
+        """Calcula dinamicamente o subtotal multiplicando a quantidade pelo preço atual do produto."""
         return self.sku.product.price * self.quantity
 
     def __str__(self):
@@ -107,6 +129,12 @@ class CartItem(models.Model):
 
 
 class Order(models.Model):
+    """
+    Registro definitivo de uma transação concretizada entre um Cliente e um Lojista.
+    
+    Armazena o valor total congelado no momento da compra, os dados de entrega
+    e gerencia o ciclo de vida da entrega através do campo 'status'.
+    """
     STATUS_CHOICES = (
         ('PENDING', 'Pending'),
         ('PROCESSING', 'Processing'),
@@ -146,9 +174,15 @@ class Order(models.Model):
         return f"Order from Customer {self.customer.fullname} to Merchant {self.merchant.fullname} - Total: {self.total:.2f}"
 
 
-# Apesar de parecer redundante alguns campos com o SKU, a classe OrderItem é necessária para armazenar as 
-# informações específicas de cada item dentro de um pedido no momento que estão sendo realizados...
 class OrderItem(models.Model):
+    """
+    Snapshot (fotografia) de um item no exato momento da consolidação do pedido.
+    
+    Apesar de replicar dados do SKU original (nome, cor, tamanho, preço unitário), 
+    esta redundância é intencional e necessária. Ela garante a integridade do histórico 
+    financeiro do cliente e do lojista: se o lojista alterar o preço ou o nome do produto 
+    no futuro, as informações deste pedido já fechado permanecerão inalteradas.
+    """
 
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_items')
     sku = models.ForeignKey(SKU, on_delete=models.SET_NULL, null=True)

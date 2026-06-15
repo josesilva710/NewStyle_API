@@ -2,8 +2,21 @@ from rest_framework import serializers
 from .models import Product, SKU, Cart, CartItem, Order, OrderItem
 
 class ProductSerializer(serializers.ModelSerializer):
+    """
+    Descrição do Serializer:
+    - Transforma os dados do modelo Product em JSON e vice-versa.
+    - Otimiza a leitura adicionando dados contextuais úteis para o front-end.
+
+    Campos Customizados (Apenas Leitura):
+    - merchant_name: Retorna o nome completo do lojista dono do produto.
+    - variations_count: Calcula em tempo real a quantidade de SKUs atrelados ao produto.
+
+    Validações Adicionais:
+    - validate: Bloqueia a criação de produtos por usuários que não possuam o perfil de 'MERCHANT'.
+    """
     
     merchant_name = serializers.ReadOnlyField(source='user.fullname')
+    variations_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -14,7 +27,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'price',
             'description',
             'category',
-            'is_active'
+            'is_active',
+            'variations_count'
         ]
 
         read_only_fields = ['user']
@@ -26,8 +40,19 @@ class ProductSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     "error": "Apenas usuários com perfil de lojista podem criar produtos."})
         return data
+    
+    def get_variations_count(self, obj):
+        return obj.skus.count()
             
 class SKUSerializer(serializers.ModelSerializer):
+    """
+    Descrição do Serializer:
+    - Gerencia a serialização das variações de estoque de um produto (SKU).
+
+    Validações Adicionais:
+    - validate_product: Garante de forma extra de segurança que a variação está sendo atrelada
+      a um produto que realmente pertence ao usuário autenticado.
+    """
 
     class Meta:
         model = SKU
@@ -42,6 +67,15 @@ class SKUSerializer(serializers.ModelSerializer):
         return value
 
 class CartItemSerializer(serializers.ModelSerializer):
+    """
+    Descrição do Serializer:
+    - Gerencia a entrada (criação/edição) e saída (leitura) dos itens individuais no carrinho.
+
+    Representação Customizada:
+    - to_representation: Sobrescreve o comportamento padrão do DRF para retornar um payload
+      rico em detalhes (aninhando nome do produto, lojista, detalhes do SKU e subtotal),
+      dispensando múltiplas chamadas do front-end à API.
+    """
 
     sku = serializers.PrimaryKeyRelatedField(queryset=SKU.objects.all())
 
@@ -50,7 +84,6 @@ class CartItemSerializer(serializers.ModelSerializer):
         fields = ['id', 'sku', 'quantity']
 
     def to_representation(self, instance):
-
         data = super().to_representation(instance)
         unit_price = instance.sku.product.price
 
@@ -70,6 +103,11 @@ class CartItemSerializer(serializers.ModelSerializer):
         }
 
 class CartSerializer(serializers.ModelSerializer):
+    """
+    Descrição do Serializer:
+    - Representa o carrinho de compras completo do cliente.
+    - Funciona apenas para consolidar os dados de leitura, trazendo os itens aninhados e o valor total calculado.
+    """
 
     cart_items = CartItemSerializer(many=True, read_only=True)
     total = serializers.FloatField(read_only=True)
@@ -79,19 +117,26 @@ class CartSerializer(serializers.ModelSerializer):
         fields = ['cart_items', 'total']
     
 class OrderItemSerializer(serializers.ModelSerializer):
+    """
+    Descrição do Serializer:
+    - Serializa os itens individuais após a concretização de um pedido.
+    - Serve como um registro imutável (snapshot) das características do produto no momento exato da compra.
+    - Oculta propositalmente as chaves estrangeiras (sku, order) para simplificar a visualização do JSON.
+    """
 
     class Meta:
-
         model = OrderItem
-
         exclude = ['sku', 'order']
 
 class OrderSerializer(serializers.ModelSerializer):
+    """
+    Descrição do Serializer:
+    - Consolida todas as informações de um pedido finalizado (status, pagamento, endereço).
+    - Traz os itens do pedido aninhados automaticamente (order_items) para visualização do extrato da compra.
+    """
 
     order_items = OrderItemSerializer(many=True, read_only=True)
 
     class Meta:
-
         model = Order
-
         fields = ['id', 'created_at', 'status', 'payment_method', 'delivery_address', 'order_items', 'total']
