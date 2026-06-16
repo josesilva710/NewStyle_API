@@ -19,6 +19,77 @@
 | **Django 6.0.4** | Framework backend robusto e escalável |
 | **Django REST Framework 3.7.1** | Criação e gerenciamento de APIs RESTful |
 
+<details>
+<summary><b>Ver lista completa de dependências (requirements.txt)</b></summary>
+
+```text
+asgiref==3.11.1
+attrs==26.1.0
+Django==6.0.4
+django-filter==25.2
+djangorestframework==3.17.1
+djangorestframework_simplejwt==5.5.1
+drf-nested-routers==0.95.0
+drf-spectacular==0.29.0
+inflection==0.5.1
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+Markdown==3.10.2
+pillow==12.2.0
+PyJWT==2.13.0
+PyYAML==6.0.3
+referencing==0.37.0
+rpds-py==2026.5.1
+sqlparse==0.5.5
+tzdata==2026.2
+uritemplate==4.2.0
+```
+</details>
+
+## 🚀 Instalação e Execução
+
+Siga o passo a passo abaixo para configurar e rodar a aplicação no seu ambiente local:
+
+**1. Clone o repositório:**
+```bash
+git clone [https://github.com/josesilva710/SEU_REPOSITORIO.git](https://github.com/josesilva710/SEU_REPOSITORIO.git)
+cd SEU_REPOSITORIO
+```
+
+**2. Crie e ative o ambiente virtual:**
+* No Windows:
+  ```bash
+  python -m venv venv
+  venv\Scripts\activate
+  ```
+* No Linux/Mac:
+  ```bash
+  python3 -m venv venv
+  source venv/bin/activate
+  ```
+
+**3. Instale as dependências:**
+```bash
+pip install -r requirements.txt
+```
+
+**4. Execute as migrações do banco de dados:**
+```bash
+python manage.py migrate
+```
+
+**5. Inicie o servidor local:**
+```bash
+python manage.py runserver
+```
+A API estará disponível em `http://127.0.0.1:8000/`.
+
+## 🗄️ Modelagem de Dados
+
+Abaixo está o diagrama UML (Entidade-Relacionamento) que modela a arquitetura do banco de dados da API, demonstrando as relações entre Usuários, Produtos, Carrinho e Pedidos:
+
+![Diagrama UML da Modelagem de Dados](https://github.com/user-attachments/assets/2450d043-c382-4ff8-8abe-fe9312d39e56)
+
 ## 🏗️ Estrutura e Organização
 
 A aplicação é composta por dois módulos principais:
