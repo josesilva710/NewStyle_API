@@ -52,8 +52,8 @@ Siga o passo a passo abaixo para configurar e rodar a aplicação no seu ambient
 
 **1. Clone o repositório:**
 ```bash
-git clone [https://github.com/josesilva710/SEU_REPOSITORIO.git](https://github.com/josesilva710/SEU_REPOSITORIO.git)
-cd SEU_REPOSITORIO
+git clone https://github.com/josesilva710/NewStyle_API.git
+cd NewStyle_API
 ```
 
 **2. Crie e ative o ambiente virtual:**
