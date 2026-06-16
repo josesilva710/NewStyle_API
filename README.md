@@ -184,6 +184,18 @@ NewStyle_API/
 ├── requirements.txt
 └── schema.yml
 ```
+
+---
+## 🚀 Roadmap e Próximas Implementações
+
+Com a arquitetura base estruturada e o deploy realizado com sucesso, as próximas etapas de evolução mapeadas para o sistema são:
+
+- [ ] **E-mails Transacionais:** Configuração de um serviço SMTP para envio de e-mails de confirmação de cadastro e recuperação de senhas.
+- [ ] **Gateway de Pagamento (Mock):** Integração de um fluxo simulado de checkout para processamento de transações.
+- [ ] **Testes Automatizados:** Implementação de testes unitários e de integração utilizando as ferramentas nativas do Django.
+- [ ] **Banco de Dados de Produção:** Migração do banco de dados atual (`sqlite3`) para uma instância externa gerenciada (como PostgreSQL).
+- [ ] **Integração Contínua (CI/CD):** Configuração de GitHub Actions para automatizar o deploy no ambiente de produção a cada novo commit.
+
 ## 👨‍💻 Autor
 
 **José Fernandes**<br>
