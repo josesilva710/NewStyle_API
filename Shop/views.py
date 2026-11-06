@@ -6,7 +6,7 @@ from Shop.serializers import (
     CartSerializer, 
     CartItemSerializer,
     OrderSerializer,
-)
+) .
 from rest_framework import viewsets, filters, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from Shop.permissions import IsMerchant, IsProductOwner, IsCartOwner, IsOrderMerchant
